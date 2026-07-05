@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>COFEATURE - Keyslar</title>
+<link rel="stylesheet" href="styles.css">
+<script src="balance.js" defer></script>
+<script src="vip.js" defer></script>
+<script src="referral.js" defer></script>
+<script src="gifts.js" defer></script>
+<script src="extras.js" defer></script>
+<script src="shell.js" defer></script>
+<script src="daily.js" defer></script>
+<script src="social.js" defer></script>
+</head>
+<body>
+
+  <div class="topbar">
+    <div class="topbar-left">
+      <a class="back-btn" href="index.html">⬅ Lobbi</a>
+      <div class="brand">🎁 KEYSLAR</div>
+    </div>
+    <div class="balance-pill">💎 <span class="js-balance">0</span></div>
+  </div>
+
+  <div class="game-page-wrap">
+    <div class="app-container">
+
+      <div class="game-heading">🎁 SOVG'A KEYSLARI</div>
+      <div class="game-subtitle">Keyni tanlang va oching — ichidan tasodifiy darajadagi sovg'a (gift) chiqadi va inventaringizga tushadi. Uni istalgan vaqtda sotishingiz yoki Apgreyderda tavakkal qilishingiz mumkin.</div>
+
+      <div class="cases-grid" id="casesGrid"></div>
+
+      <div class="reel-wrap" id="reelWrap" style="display:none;">
+        <div class="reel-pointer"></div>
+        <div class="reel-track" id="reelTrack"></div>
+      </div>
+
+      <div class="win-reveal" id="winReveal">
+        <div class="gift-icon-wrap" id="winIconWrap"></div>
+        <div class="gift-drop-shadow" id="winShadow"></div>
+        <div style="font-weight:800; font-size:15px;" id="winName"></div>
+        <div style="font-size:12px; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px;" id="winRarity"></div>
+        <div style="font-weight:900; font-size:18px; color:var(--accent-amber);" id="winValue"></div>
+        <div style="display:flex; gap:8px; width:100%; margin-top:6px;">
+          <a href="inventory.html" class="primary-btn" style="background:rgba(255,255,255,0.08); color:#fff; flex:1; text-align:center; text-decoration:none;">🎒 Inventarga</a>
+          <button class="primary-btn blue" style="flex:1;" id="sellNowBtn" onclick="sellLastWin()">💰 Darhol sotish</button>
+        </div>
+      </div>
+
+      <div class="free24-code-row" id="free24CodeRow" style="display:none;">
+        <input class="bet-input" id="free24CodeInput" placeholder="Promo kodni kiriting" maxlength="20">
+      </div>
+      <div class="free24-timer" id="free24Timer" style="display:none;"></div>
+
+      <button class="primary-btn" id="openBtn" onclick="openCase()">KEYNI OCHISH</button>
+
+      <div class="history-bar" id="history" style="margin-top:16px;"></div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // Eslatma: SKZ_GIFTS ro'yxati gifts.js faylida e'lon qilingan (defer bilan
+    // yuklanadi). Uni bu yerda darhol o'qimaymiz — faqat funksiyalar ichida
+    // (masalan, skzWeightedGiftPick() orqali) ishlatamiz, aks holda sahifa
+    // hali to'liq yuklanmasdan xatolik chiqib, KEYNI OCHISH tugmasi ishlamay
+    // qoladi.
+
+    const SKZ_FREE24_KEY = 'skinoz_free24_last_v1';
+    const SKZ_FREE24_CODE = 'tekin24';
+    const SKZ_FREE24_COOLDOWN = 24 * 60 * 60 * 1000;
+
+    const CASES = [
+      { id: 'bronze',  name: "Bronza Key",  price: 100,  class: 'rarity-common',    img: 'img/case-bronze.png' },
+      { id: 'silver',  name: "Kumush Key",  price: 500,  class: 'rarity-rare',      img: 'img/case-silver.png' },
+      { id: 'gold',    name: "Oltin Key",   price: 1500, class: 'rarity-epic',      img: 'img/case-gold.png' },
+      { id: 'diamond', name: "Olmos Key",   price: 5000, class: 'rarity-legendary', img: 'img/case-diamond.png' },
+      { id: 'free24',  name: "Free24 Key",  price: 0,    class: 'rarity-rare', img: 'img/case-free24.png', free: true },
+    ];
+
+    let selectedCase = CASES[0];
+    let opening = false;
+    let lastWonItemId = null;
+    let free24IntervalId = null;
+
+    function showToast(msg, type) {
+      const t = document.getElementById('toast');
+      t.innerText = msg;
+      t.className = 'toast show ' + (type || '');
+      if (window.skzOnToast) window.skzOnToast(type);
+      setTimeout(() => t.classList.remove('show'), 2000);
+    }
+
+    function buildCasesGrid() {
+      const grid = document.getElementById('casesGrid');
+      grid.innerHTML = CASES.map(c => `
+        <div class="case-card ${c.id === selectedCase.id ? 'active' : ''}" data-id="${c.id}" onclick="selectCase('${c.id}')">
+          ${c.free ? '<div class="badge badge-free" style="position:absolute; top:8px; right:8px;">24H</div>' : ''}
+          <div class="case-box ${c.class}"><img src="${c.img || skzGiftSrc('Case.webp')}" alt="${c.name}" style="width:56px; height:56px; object-fit:contain;"></div>
+          <div class="case-name">${c.name}</div>
+          <div class="case-price">${c.free ? '🎁 BEPUL' : '💎 ' + skzFmt(c.price)}</div>
+        </div>
+      `).join('');
+    }
+
+    function selectCase(id) {
+      if (opening) return;
+      selectedCase = CASES.find(c => c.id === id);
+      buildCasesGrid();
+      document.getElementById('winReveal').classList.remove('show');
+      refreshFree24UI();
+    }
+
+    function skzFmtTime(ms) {
+      const total = Math.max(0, Math.ceil(ms / 1000));
+      const h = Math.floor(total / 3600);
+      const m = Math.floor((total % 3600) / 60);
+      const s = total % 60;
+      return [h, m, s].map(n => String(n).padStart(2, '0')).join(':');
+    }
+
+    function free24RemainingMs() {
+      const last = parseInt(localStorage.getItem(SKZ_FREE24_KEY), 10) || 0;
+      return SKZ_FREE24_COOLDOWN - (Date.now() - last);
+    }
+
+    function refreshFree24UI() {
+      const codeRow = document.getElementById('free24CodeRow');
+      const timer = document.getElementById('free24Timer');
+      const openBtn = document.getElementById('openBtn');
+
+      if (free24IntervalId) { clearInterval(free24IntervalId); free24IntervalId = null; }
+
+      if (!selectedCase.free) {
+        codeRow.style.display = 'none';
+        timer.style.display = 'none';
+        openBtn.disabled = opening;
+        return;
+      }
+
+      codeRow.style.display = 'flex';
+      timer.style.display = 'block';
+
+      const tick = () => {
+        const remaining = free24RemainingMs();
+        if (remaining <= 0) {
+          timer.className = 'free24-timer ready';
+          timer.innerText = "✅ Bepul key tayyor! Promo kodni kiriting va oching.";
+          openBtn.disabled = opening;
+          if (free24IntervalId) { clearInterval(free24IntervalId); free24IntervalId = null; }
+        } else {
+          timer.className = 'free24-timer';
+          timer.innerText = `⏳ Keyingi bepul key: ${skzFmtTime(remaining)}`;
+          openBtn.disabled = true;
+        }
+      };
+      tick();
+      free24IntervalId = setInterval(tick, 1000);
+    }
+
+    function weightedPick() {
+      return skzWeightedGiftPick();
+    }
+
+    function buildReelStrip(finalGift) {
+      const track = document.getElementById('reelTrack');
+      track.innerHTML = '';
+      track.style.transition = 'none';
+      track.style.transform = 'translateX(0px)';
+
+      const stripLen = 34;
+      const items = [];
+      for (let i = 0; i < stripLen - 1; i++) items.push(weightedPick());
+      const landingIndex = stripLen - 4; // land a few items before the end for a nice run-up
+      items.splice(landingIndex, 0, finalGift);
+
+      items.forEach(g => {
+        const card = document.createElement('div');
+        card.className = 'gift-card';
+        const val = selectedCase.free ? skzGiftBaseValue(g) : Math.floor(selectedCase.price * g.mult);
+        card.innerHTML = `
+          <div class="gift-icon-wrap rarity-${g.rarity}">${skzGiftImg(g.file, g.name)}</div>
+          <div class="gift-name">${g.name}</div>
+          <div class="gift-value">💎 ${skzFmt(val)}</div>
+        `;
+        track.appendChild(card);
+      });
+
+      return landingIndex;
+    }
+
+    function openCase() {
+      if (opening) return;
+      const price = selectedCase.price;
+
+      if (selectedCase.free) {
+        if (free24RemainingMs() > 0) {
+          showToast("⏳ Bepul key hali tayyor emas!", 'lose');
+          return;
+        }
+        const codeInput = document.getElementById('free24CodeInput');
+        const code = (codeInput.value || '').trim().toLowerCase();
+        if (code !== SKZ_FREE24_CODE) {
+          showToast("❌ Noto'g'ri promo kod!", 'lose');
+          return;
+        }
+      } else if (skzGetBalance() < price) {
+        showToast("Balansingizda mablag' yetarli emas!", 'lose');
+        return;
+      }
+
+      opening = true;
+      document.getElementById('openBtn').disabled = true;
+      document.getElementById('winReveal').classList.remove('show');
+      if (window.skzSound) skzSound.open();
+      if (typeof skzStatsRecordCaseOpen === 'function') skzStatsRecordCaseOpen();
+      if (!selectedCase.free) skzAddBalance(-price);
+      const finalGift = weightedPick();
+      const reelWrap = document.getElementById('reelWrap');
+      reelWrap.style.display = 'block';
+      const landingIndex = buildReelStrip(finalGift);
+
+      const cardWidth = 96 + 12; // gift-card width + gap
+      const wrapWidth = reelWrap.clientWidth;
+      const targetOffset = landingIndex * cardWidth + cardWidth / 2 - wrapWidth / 2;
+
+      requestAnimationFrame(() => {
+        const track = document.getElementById('reelTrack');
+        track.style.transition = 'transform 4.2s cubic-bezier(0.12, 0.85, 0.15, 1)';
+        track.style.transform = `translateX(-${targetOffset}px)`;
+      });
+
+      setTimeout(() => {
+        const winAmount = selectedCase.free ? skzGiftBaseValue(finalGift) : Math.floor(price * finalGift.mult);
+        const invItem = skzAddInventoryItem({
+          name: finalGift.name,
+          rarity: finalGift.rarity,
+          file: finalGift.file,
+          value: winAmount
+        });
+        lastWonItemId = invItem.id;
+
+        if (selectedCase.free) {
+          localStorage.setItem(SKZ_FREE24_KEY, Date.now());
+          const codeInput = document.getElementById('free24CodeInput');
+          if (codeInput) codeInput.value = '';
+        }
+
+        document.getElementById('winIconWrap').className = 'gift-icon-wrap rarity-' + finalGift.rarity;
+        document.getElementById('winIconWrap').innerHTML = skzGiftImg(finalGift.file, finalGift.name, 'gift-drop-anim');
+        const shadowEl = document.getElementById('winShadow');
+        shadowEl.style.animation = 'none';
+        void shadowEl.offsetWidth; // reflow so the animation replays every open
+        shadowEl.style.animation = '';
+        document.getElementById('winName').innerText = finalGift.name;
+        document.getElementById('winRarity').innerText = SKZ_RARITY_LABEL[finalGift.rarity];
+        document.getElementById('winValue').innerText = `${skzFmt(winAmount)} 💎`;
+        document.getElementById('winReveal').classList.add('show');
+
+        const isProfit = selectedCase.free ? true : winAmount >= price;
+        showToast(isProfit ? `🎉 ${finalGift.name} inventarga qo'shildi!` : `${finalGift.name} inventarga qo'shildi`, isProfit ? 'win' : 'lose');
+
+        const hist = document.getElementById('history');
+        const div = document.createElement('div');
+        div.className = 'history-item';
+        div.style.color = isProfit ? '#2f6fed' : '#ef4444';
+        div.innerText = finalGift.name.split(' ')[0];
+        hist.prepend(div);
+        if (hist.children.length > 10) hist.removeChild(hist.lastChild);
+
+        opening = false;
+        document.getElementById('openBtn').disabled = false;
+      }, 4300);
+    }
+
+    function sellLastWin() {
+      if (!lastWonItemId) return;
+      const amount = skzSellItem(lastWonItemId);
+      if (amount > 0) {
+        showToast(`💰 Sotildi! +${skzFmt(amount)} 💎`, 'win');
+        document.getElementById('winReveal').classList.remove('show');
+        lastWonItemId = null;
+      }
+    }
+
+    window.onload = () => { buildCasesGrid(); refreshFree24UI(); };
+  </script>
+</body>
+</html>

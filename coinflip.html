@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>COFEATURE - CoinFlip</title>
+<link rel="stylesheet" href="styles.css">
+<script src="balance.js" defer></script>
+<script src="vip.js" defer></script>
+<script src="referral.js" defer></script>
+<script src="gifts.js" defer></script>
+<script src="giftbet.js" defer></script>
+<script src="extras.js" defer></script>
+<script src="shell.js" defer></script>
+<script src="daily.js" defer></script>
+<script src="social.js" defer></script>
+<style>
+  .coin-wrap {
+    width: 160px;
+    height: 160px;
+    margin: 10px auto 24px;
+    perspective: 800px;
+  }
+  .coin {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    transform-style: preserve-3d;
+    transition: transform 2.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  .coin-face {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    backface-visibility: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 50px;
+    font-weight: 900;
+    border: 4px solid rgba(255,255,255,0.2);
+  }
+  .coin-heads { background: radial-gradient(circle, #f59e0b, #92400e); color: #fff; }
+  .coin-tails { background: radial-gradient(circle, #64748b, #1e293b); color: #fff; transform: rotateY(180deg); }
+
+  .side-picker { display: flex; gap: 10px; width: 100%; margin-bottom: 16px; }
+  .side-btn {
+    flex: 1;
+    background: var(--bg-card);
+    border: 2px solid rgba(255,255,255,0.08);
+    color: #cbd5e1;
+    padding: 14px;
+    border-radius: 14px;
+    font-weight: 800;
+    font-size: 14px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+  }
+  .side-btn.active { border-color: var(--accent-amber); color: #fff; background: rgba(245,158,11,0.1); }
+  .side-emoji { font-size: 24px; }
+
+  .streak-row {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    background: var(--bg-card);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 12px;
+    padding: 10px 14px;
+    font-size: 13px;
+    margin-bottom: 14px;
+    color: #cbd5e1;
+  }
+</style>
+</head>
+<body>
+
+  <div class="topbar">
+    <div class="topbar-left">
+      <a class="back-btn" href="index.html">⬅ Lobbi</a>
+      <div class="brand">🪙 COINFLIP</div>
+    </div>
+    <div class="balance-pill">💎 <span class="js-balance">0</span></div>
+  </div>
+
+  <div class="game-page-wrap">
+    <div class="app-container">
+
+      <div class="history-bar" id="history"></div>
+
+      <div class="coin-wrap">
+        <div class="coin" id="coin">
+          <div class="coin-face coin-heads">👑</div>
+          <div class="coin-face coin-tails">⭐</div>
+        </div>
+      </div>
+
+      <div class="streak-row">
+        <span>Ketma-ket g'alaba: <b id="streak" style="color:var(--accent);">0</b></span>
+        <span>Yutuq: <b id="winMultLabel">x1.96</b></span>
+      </div>
+
+      <div class="side-picker">
+        <button class="side-btn active" id="btn-heads" onclick="selectSide('heads')">
+          <span class="side-emoji">👑</span> ORQA (Heads)
+        </button>
+        <button class="side-btn" id="btn-tails" onclick="selectSide('tails')">
+          <span class="side-emoji">⭐</span> OLD (Tails)
+        </button>
+      </div>
+
+      <div id="stakeMode"></div>
+
+      <div id="cashControls">
+        <div class="quick-bets">
+          <button class="quick-btn" onclick="selectBetAmount(50, event)">+50</button>
+          <button class="quick-btn" onclick="selectBetAmount(200, event)">+200</button>
+          <button class="quick-btn" onclick="selectBetAmount(500, event)">+500</button>
+          <button class="quick-btn" onclick="selectBetAmount('MAX', event)">MAX</button>
+        </div>
+
+        <div class="bet-input-row">
+          <input type="number" class="bet-input" id="betAmount" value="100" min="1">
+        </div>
+      </div>
+
+      <button class="primary-btn" id="flipBtn" onclick="flipCoin()">TANGA TASHLASH</button>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    let selectedSide = 'heads';
+    let betAmount = 100;
+    let streak = 0;
+    let flipping = false;
+    let totalRotation = 0;
+    const WIN_MULT = 1.96; // ~2x minus house edge
+
+    function showToast(msg, type) {
+      const t = document.getElementById('toast');
+      t.innerText = msg;
+      t.className = 'toast show ' + (type || '');
+      if (window.skzOnToast) window.skzOnToast(type);
+      setTimeout(() => t.classList.remove('show'), 1800);
+    }
+
+    function selectSide(side) {
+      if (flipping) return;
+      selectedSide = side;
+      document.getElementById('btn-heads').classList.toggle('active', side === 'heads');
+      document.getElementById('btn-tails').classList.toggle('active', side === 'tails');
+    }
+
+    function selectBetAmount(amount, ev) {
+      betAmount = amount === 'MAX' ? skzGetBalance() : amount;
+      document.getElementById('betAmount').value = betAmount;
+      document.querySelectorAll('.quick-btn').forEach(btn => btn.classList.remove('active'));
+      if (ev) ev.target.classList.add('active');
+    }
+
+    document.getElementById('betAmount').addEventListener('input', (e) => {
+      betAmount = parseInt(e.target.value) || 0;
+    });
+
+    function flipCoin() {
+      if (flipping) return;
+      if (!skzGiftBetCanPlace(betAmount)) {
+        showToast(skzStake.mode === 'gift' ? "Avval sovg'a tanlang!" : "Balansingizda mablag' yetarli emas!", 'lose');
+        return;
+      }
+      flipping = true;
+      document.getElementById('flipBtn').disabled = true;
+      const stakeInfo = skzGiftBetConsume(betAmount);
+
+      const result = Math.random() < 0.5 ? 'heads' : 'tails';
+      const extraSpins = 6;
+      const landRotation = result === 'heads' ? 0 : 180;
+      totalRotation += 360 * extraSpins + landRotation - (totalRotation % 360);
+
+      const coin = document.getElementById('coin');
+      coin.style.transform = `rotateY(${totalRotation}deg)`;
+
+      setTimeout(() => {
+        const won = result === selectedSide;
+        const hist = document.getElementById('history');
+        const div = document.createElement('div');
+        div.className = 'history-item';
+        div.style.color = won ? '#2f6fed' : '#ef4444';
+        div.innerText = result === 'heads' ? '👑' : '⭐';
+        hist.prepend(div);
+        if (hist.children.length > 10) hist.removeChild(hist.lastChild);
+
+        if (won) {
+          streak++;
+          const outcome = skzGiftBetResolveWin(stakeInfo, WIN_MULT);
+          if (outcome.type === 'gift') {
+            showToast(`🎉 To'g'ri topdingiz! ${outcome.from.name} → ${outcome.gift.name} 🎁`, 'win');
+          } else {
+            showToast(`🎉 To'g'ri topdingiz! +${skzFmt(outcome.amount)} 💎`, 'win');
+          }
+        } else {
+          streak = 0;
+          const outcome = skzGiftBetResolveLose(stakeInfo);
+          showToast(outcome.type === 'gift-lost' ? `💥 Noto'g'ri! ${outcome.from.name} kuydi.` : `❌ Noto'g'ri! -${skzFmt(outcome.amount)} 💎`, 'lose');
+        }
+        document.getElementById('streak').innerText = streak;
+
+        flipping = false;
+        document.getElementById('flipBtn').disabled = false;
+      }, 2300);
+    }
+
+    window.onload = () => {
+      document.getElementById('winMultLabel').innerText = 'x' + WIN_MULT;
+      skzGiftBetInitUI('stakeMode', () => {
+        document.getElementById('cashControls').style.display = skzStake.mode === 'gift' ? 'none' : 'block';
+      });
+    };
+  </script>
+</body>
+</html>

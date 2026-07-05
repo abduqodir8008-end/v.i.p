@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>COFEATURE - Reyting</title>
+<link rel="stylesheet" href="styles.css">
+<script src="balance.js" defer></script>
+<script src="vip.js" defer></script>
+<script src="referral.js" defer></script>
+<script src="gifts.js" defer></script>
+<script src="extras.js" defer></script>
+<script src="shell.js" defer></script>
+<script src="daily.js" defer></script>
+<script src="social.js" defer></script>
+</head>
+<body>
+
+  <div class="topbar">
+    <div class="topbar-left">
+      <a class="back-btn" href="index.html">⬅ Lobbi</a>
+      <div class="brand">🏆 REYTING</div>
+    </div>
+    <div class="balance-pill">💎 <span class="js-balance">0</span></div>
+  </div>
+
+  <div class="game-page-wrap">
+    <div class="app-container">
+
+      <div class="game-heading">🏆 LIDERLAR JADVALI</div>
+      <div class="game-subtitle">Eng ko'p yutgan va eng qimmat sovg'a chiqargan o'yinchilar (demo reyting, faqat hayajon uchun — haqiqiy pul ishtirok etmaydi).</div>
+
+      <div class="leaderboard-rewards">
+        <div class="rewards-header">
+          <span>🎁 Haftalik mukofotlar</span>
+          <span class="rewards-countdown">⏳ <span id="leaderboardCountdown">--</span></span>
+        </div>
+        <div class="rewards-grid">
+          <div class="reward-card gold">🥇
+            <div class="reward-amount">50,000 💎</div>
+            <div class="reward-extra">+ Legendary sovg'a</div>
+          </div>
+          <div class="reward-card silver">🥈
+            <div class="reward-amount">25,000 💎</div>
+            <div class="reward-extra">+ Epic sovg'a</div>
+          </div>
+          <div class="reward-card bronze">🥉
+            <div class="reward-amount">10,000 💎</div>
+            <div class="reward-extra">+ Rare sovg'a</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="leaderboard-list" id="leaderboardList"></div>
+
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    function showToast(msg, type) {
+      const t = document.getElementById('toast');
+      t.innerText = msg;
+      t.className = 'toast show ' + (type || '');
+      if (window.skzOnToast) window.skzOnToast(type);
+      setTimeout(() => t.classList.remove('show'), 2000);
+    }
+
+    function medalFor(rank) {
+      if (rank === 1) return '🥇';
+      if (rank === 2) return '🥈';
+      if (rank === 3) return '🥉';
+      return rank;
+    }
+
+    function renderLeaderboard() {
+      const rows = skzGetLeaderboard();
+      const list = document.getElementById('leaderboardList');
+      list.innerHTML = rows.map((r, i) => {
+        const rank = i + 1;
+        const rowClass = ['leaderboard-row'];
+        if (rank === 1) rowClass.push('top1');
+        else if (rank === 2) rowClass.push('top2');
+        else if (rank === 3) rowClass.push('top3');
+        if (r.isUser) rowClass.push('is-user');
+        return `
+          <div class="${rowClass.join(' ')}">
+            <div class="leaderboard-rank">${medalFor(rank)}</div>
+            <div class="leaderboard-info">
+              <div class="leaderboard-name">${r.isUser ? '⭐ ' : ''}${r.name}</div>
+              <div class="leaderboard-drop">🎁 ${r.drop}</div>
+            </div>
+            <div class="leaderboard-score">💎 ${skzFmt(r.score)}</div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function skzNextMondayMidnight() {
+      const now = new Date();
+      const day = now.getDay(); // 0=Yak, 1=Dush, ... 6=Shan
+      const daysUntilMonday = (8 - day) % 7 || 7;
+      const next = new Date(now);
+      next.setDate(now.getDate() + daysUntilMonday);
+      next.setHours(0, 0, 0, 0);
+      return next;
+    }
+
+    function renderCountdown() {
+      const el = document.getElementById('leaderboardCountdown');
+      if (!el) return;
+      const target = skzNextMondayMidnight();
+      function tick() {
+        const diff = target - new Date();
+        if (diff <= 0) { el.innerText = "Yangilanmoqda..."; return; }
+        const d = Math.floor(diff / 86400000);
+        const h = Math.floor((diff % 86400000) / 3600000);
+        const m = Math.floor((diff % 3600000) / 60000);
+        const s = Math.floor((diff % 60000) / 1000);
+        el.innerText = `${d}k ${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+      }
+      tick();
+      setInterval(tick, 1000);
+    }
+
+    window.onload = () => {
+      renderLeaderboard();
+      renderCountdown();
+    };
+  </script>
+</body>
+</html>

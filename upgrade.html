@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>COFEATURE - Apgreyder</title>
+<link rel="stylesheet" href="styles.css">
+<script src="balance.js" defer></script>
+<script src="vip.js" defer></script>
+<script src="referral.js" defer></script>
+<script src="gifts.js" defer></script>
+<script src="extras.js" defer></script>
+<script src="shell.js" defer></script>
+<script src="daily.js" defer></script>
+<script src="social.js" defer></script>
+<style>
+  .upg-picker-row {
+    display: flex;
+    gap: 10px;
+    width: 100%;
+    overflow-x: auto;
+    padding-bottom: 6px;
+    margin-bottom: 16px;
+  }
+  .upg-pick-item {
+    flex-shrink: 0;
+    width: 78px;
+    background: var(--bg-card);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 12px;
+    padding: 8px 4px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+  }
+  .upg-pick-item.active { border-color: var(--accent-purple); box-shadow: 0 0 0 1px var(--accent-purple); }
+  .upg-pick-item .gift-icon-wrap { width: 40px; height: 40px; border-radius: 9px; display: flex; align-items: center; justify-content: center; }
+  .upg-pick-item .gift-icon-wrap svg { width: 24px; height: 24px; }
+  .upg-pick-item .val { font-size: 9.5px; font-weight: 800; color: var(--accent-amber); }
+
+  .upg-stage {
+    width: 100%;
+    background: var(--bg-card);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 18px;
+    padding: 22px 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+  .upg-arrow-row { display: flex; align-items: center; gap: 18px; }
+  .upg-slot {
+    width: 84px;
+    height: 84px;
+    border-radius: 16px;
+    background: #0d131f;
+    border: 1.5px dashed rgba(255,255,255,0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .upg-slot.filled { border-style: solid; }
+  .upg-slot svg { width: 44px; height: 44px; }
+  .upg-arrow { font-size: 22px; color: var(--text-muted); }
+
+  .upg-mult-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; width: 100%; }
+  .upg-mult-btn {
+    background: var(--bg-card);
+    border: 1px solid rgba(255,255,255,0.1);
+    color: #cbd5e1;
+    padding: 10px 4px;
+    border-radius: 10px;
+    font-weight: 800;
+    font-size: 13px;
+    cursor: pointer;
+  }
+  .upg-mult-btn.active { background: var(--accent-purple); border-color: var(--accent-purple); color: #fff; }
+
+  .upg-wheel-wrap {
+    position: relative;
+    width: 190px;
+    height: 190px;
+    margin: 4px 0 2px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .upg-wheel-pointer {
+    position: absolute;
+    top: -10px;
+    z-index: 10;
+    width: 28px;
+    height: 28px;
+    background: #ffffff;
+    border: 3px solid var(--bg-card);
+    clip-path: polygon(50% 100%, 0 0, 100% 0);
+    filter: drop-shadow(0 4px 6px rgba(0,0,0,0.5));
+  }
+  .upg-wheel {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    padding: 10px;
+    box-shadow: 0 0 30px rgba(0,0,0,0.35);
+    transition: transform 3.4s cubic-bezier(0.12, 0.85, 0.18, 1);
+  }
+  .upg-wheel-inner {
+    width: 100%;
+    height: 100%;
+    background: #0d131f;
+    border-radius: 50%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    box-shadow: inset 0 0 20px rgba(0,0,0,0.85);
+    transition: transform 3.4s cubic-bezier(0.12, 0.85, 0.18, 1);
+  }
+  .upg-wheel-inner .chance-value { font-size: 26px; font-weight: 900; color: #fff; }
+  .upg-wheel-inner .chance-caption { font-size: 10.5px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-top: 2px; }
+</style>
+</head>
+<body>
+
+  <div class="topbar">
+    <div class="topbar-left">
+      <a class="back-btn" href="index.html">⬅ Lobbi</a>
+      <div class="brand">⚡ APGREYDER</div>
+    </div>
+    <div class="balance-pill">💎 <span class="js-balance">0</span></div>
+  </div>
+
+  <div class="game-page-wrap">
+    <div class="app-container">
+
+      <div class="game-heading">⚡ SOVG'ANI APGREYD QILISH</div>
+      <div class="game-subtitle">Inventardan bitta sovg'a tanlang, ko'paytmani belgilang va tavakkal qiling — yutsangiz sovg'angiz shuncha marta qimmatlashadi, yutqazsangiz — sovg'a kuyadi.</div>
+
+      <div class="upg-picker-row" id="pickerRow"></div>
+
+      <div class="upg-stage">
+        <div class="upg-arrow-row">
+          <div class="upg-slot" id="slotBefore"></div>
+          <div class="upg-arrow">➜</div>
+          <div class="upg-slot" id="slotAfter"></div>
+        </div>
+
+        <div class="upg-mult-row" id="multRow"></div>
+
+        <div class="upg-wheel-wrap">
+          <div class="upg-wheel-pointer"></div>
+          <div class="upg-wheel" id="upgWheel">
+            <div class="upg-wheel-inner">
+              <span class="chance-value" id="chanceLabel">0%</span>
+              <span class="chance-caption">g'alaba ehtimoli</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <button class="primary-btn" id="upgradeBtn" onclick="onUpgrade()">APGREYD QILISH</button>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const MULTS = [1.5, 2, 3, 5, 10];
+    let selectedItemId = null;
+    let selectedMult = 2;
+    let rolling = false;
+    let wheelRotation = 0;
+    let currentTargetGift = null; // Apgreyd muvaffaqiyatli bo'lsa aylanadigan sovg'a
+
+    function showToast(msg, type) {
+      const t = document.getElementById('toast');
+      t.innerText = msg;
+      t.className = 'toast show ' + (type || '');
+      if (window.skzOnToast) window.skzOnToast(type);
+      setTimeout(() => t.classList.remove('show'), 2000);
+    }
+
+    function chanceFor(mult) {
+      // Slight house edge baked in (0.95)
+      return Math.min(95, Math.max(2, (0.95 / mult) * 100));
+    }
+
+    function renderPicker() {
+      const items = skzGetInventory();
+      const row = document.getElementById('pickerRow');
+      if (items.length === 0) {
+        row.innerHTML = `<div style="font-size:12px;color:var(--text-muted);padding:10px;">Inventaringizda sovg'a yo'q. <a href="cases.html" style="color:var(--accent);">Keys oching</a>.</div>`;
+        selectedItemId = null;
+      } else {
+        if (!selectedItemId || !items.find(i => i.id === selectedItemId)) {
+          selectedItemId = items[0].id;
+        }
+        row.innerHTML = items.map(item => `
+          <div class="upg-pick-item ${item.id === selectedItemId ? 'active' : ''}" onclick="pickItem('${item.id}')">
+            <div class="gift-icon-wrap rarity-${item.rarity}">${skzGiftImg(item.file, item.name)}</div>
+            <div class="val">💎${skzFmt(item.value)}</div>
+          </div>
+        `).join('');
+      }
+      renderStage();
+    }
+
+    function pickItem(id) {
+      if (rolling) return;
+      selectedItemId = id;
+      renderPicker();
+    }
+
+    function getSelectedItem() {
+      return skzGetInventory().find(i => i.id === selectedItemId) || null;
+    }
+
+    function renderMultRow() {
+      const row = document.getElementById('multRow');
+      row.innerHTML = MULTS.map(m => `
+        <button class="upg-mult-btn ${m === selectedMult ? 'active' : ''}" onclick="pickMult(${m})">x${m}</button>
+      `).join('');
+    }
+
+    function pickMult(m) {
+      if (rolling) return;
+      selectedMult = m;
+      renderMultRow();
+      renderStage();
+    }
+
+    function renderStage() {
+      const item = getSelectedItem();
+      const before = document.getElementById('slotBefore');
+      const after = document.getElementById('slotAfter');
+
+      if (item) {
+        before.className = 'upg-slot filled rarity-' + item.rarity;
+        before.innerHTML = skzGiftImg(item.file, item.name);
+
+        const targetValue = Math.floor(item.value * selectedMult);
+        currentTargetGift = skzFindTargetGift(targetValue, item.file);
+
+        after.className = 'upg-slot filled rarity-' + currentTargetGift.rarity;
+        after.innerHTML = skzGiftImg(currentTargetGift.file, currentTargetGift.name);
+        after.style.opacity = '0.55';
+      } else {
+        currentTargetGift = null;
+        before.className = 'upg-slot';
+        before.innerHTML = '';
+        after.className = 'upg-slot';
+        after.innerHTML = '';
+      }
+
+      const chance = item ? chanceFor(selectedMult) : 0;
+      const deg = chance * 3.6;
+      const wheelEl = document.getElementById('upgWheel');
+      const wheelInnerEl = document.querySelector('.upg-wheel-inner');
+      // Oldingi aylanishdan qolgan burchakni tozalash — aks holda pointer
+      // bilan rang chegarasi mos kelmay qoladi (vizual xato)
+      wheelEl.style.transition = 'none';
+      wheelEl.style.transform = 'rotate(0deg)';
+      if (wheelInnerEl) {
+        wheelInnerEl.style.transition = 'none';
+        wheelInnerEl.style.transform = 'rotate(0deg)';
+      }
+      wheelRotation = 0;
+      // eslatma: transition keyingi spin boshlanguncha "none" holida qoladi,
+      // spin funksiyasi o'zi qayta yoqadi (pastga qarang)
+      requestAnimationFrame(() => {
+        wheelEl.style.transition = '';
+        if (wheelInnerEl) wheelInnerEl.style.transition = '';
+      });
+      wheelEl.style.background =
+        `conic-gradient(var(--accent) 0deg ${deg}deg, var(--accent-red) ${deg}deg 360deg)`;
+      document.getElementById('chanceLabel').innerText = chance.toFixed(1) + '%';
+    }
+
+    function onUpgrade() {
+      if (rolling) return;
+      const item = getSelectedItem();
+      if (!item) {
+        showToast(skzT('pickItemFirst'), 'lose');
+        return;
+      }
+      rolling = true;
+      document.getElementById('upgradeBtn').disabled = true;
+
+      const chance = chanceFor(selectedMult);
+      const deg = chance * 3.6;
+      const won = Math.random() * 100 < chance;
+
+      // Land a few degrees inside the correct colored zone, never right on the boundary
+      const pad = 4;
+      const targetAngle = won
+        ? pad + Math.random() * Math.max(1, deg - pad * 2)
+        : deg + pad + Math.random() * Math.max(1, (360 - deg) - pad * 2);
+
+      const wheel = document.getElementById('upgWheel');
+      const wheelInner = document.querySelector('.upg-wheel-inner');
+      const spins = 360 * 6;
+      const finalAngle = spins + (360 - targetAngle);
+      wheelRotation += finalAngle;
+      requestAnimationFrame(() => {
+        wheel.style.transform = `rotate(${wheelRotation}deg)`;
+        if (wheelInner) wheelInner.style.transform = `rotate(${-wheelRotation}deg)`;
+      });
+
+      setTimeout(() => {
+        const after = document.getElementById('slotAfter');
+        if (won) {
+          const targetGift = currentTargetGift || skzFindTargetGift(Math.floor(item.value * selectedMult), item.file);
+          const newValue = Math.floor(item.value * selectedMult);
+          skzRemoveInventoryItem(item.id);
+          const newItem = skzAddInventoryItem({
+            name: targetGift.name,
+            rarity: targetGift.rarity,
+            file: targetGift.file,
+            value: newValue
+          });
+          selectedItemId = newItem.id;
+          after.className = 'upg-slot filled rarity-' + targetGift.rarity;
+          after.style.opacity = '1';
+          after.innerHTML = skzGiftImg(targetGift.file, targetGift.name, 'gift-drop-anim');
+          showToast(`🎉 Apgreyd muvaffaqiyatli! ${item.name} → ${targetGift.name} (+${skzFmt(newValue - item.value)} 💎)`, 'win');
+        } else {
+          skzRemoveInventoryItem(item.id);
+          selectedItemId = null;
+          after.style.opacity = '0.25';
+          after.className = 'upg-slot';
+          after.innerHTML = '💥';
+          showToast(`💥 Omad kulmadi! Sovg'a kuydi.`, 'lose');
+        }
+        rolling = false;
+        document.getElementById('upgradeBtn').disabled = false;
+        setTimeout(renderPicker, 1200);
+      }, 3500);
+    }
+
+    window.onload = () => {
+      renderMultRow();
+      renderPicker();
+    };
+  </script>
+</body>
+</html>

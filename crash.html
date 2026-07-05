@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>COFEATURE - Crash</title>
+<link rel="stylesheet" href="styles.css">
+<script src="balance.js" defer></script>
+<script src="vip.js" defer></script>
+<script src="referral.js" defer></script>
+<script src="gifts.js" defer></script>
+<script src="giftbet.js" defer></script>
+<script src="extras.js" defer></script>
+<script src="shell.js" defer></script>
+<script src="daily.js" defer></script>
+<script src="social.js" defer></script>
+<style>
+  .crash-chart-wrap {
+    width: 100%;
+    height: 220px;
+    background: #0d131f;
+    border-radius: 16px;
+    border: 1px solid rgba(255,255,255,0.06);
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  #crashCanvas { width: 100%; height: 100%; display: block; }
+  .crash-mult-label {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 42px;
+    font-weight: 900;
+    color: #fff;
+    text-shadow: 0 0 20px rgba(0,0,0,0.6);
+    transition: color 0.2s;
+  }
+  .crash-mult-label.crashed { color: var(--accent-red); }
+  .crash-mult-label.flying { color: var(--accent); }
+  .status-line {
+    font-size: 13px;
+    color: var(--text-muted);
+    text-align: center;
+    margin-bottom: 14px;
+    min-height: 18px;
+  }
+  .cashout-info {
+    width: 100%;
+    background: var(--bg-card);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 12px;
+    padding: 10px 14px;
+    font-size: 13px;
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 14px;
+    color: #cbd5e1;
+  }
+</style>
+</head>
+<body>
+
+  <div class="topbar">
+    <div class="topbar-left">
+      <a class="back-btn" href="index.html">⬅ Lobbi</a>
+      <div class="brand">📈 CRASH</div>
+    </div>
+    <div class="balance-pill">💎 <span class="js-balance">0</span></div>
+  </div>
+
+  <div class="game-page-wrap">
+    <div class="app-container">
+
+      <div class="history-bar" id="history"></div>
+
+      <div class="crash-chart-wrap">
+        <canvas id="crashCanvas" width="420" height="220"></canvas>
+        <div class="crash-mult-label" id="multLabel">1.00x</div>
+      </div>
+
+      <div class="status-line" id="statusLine">Keyingi tur boshlanmoqda...</div>
+
+      <div class="cashout-info">
+        <span>Tikilgan:</span>
+        <span id="activeBetLabel">— 💎</span>
+      </div>
+
+      <div id="stakeMode"></div>
+
+      <div id="cashControls">
+        <div class="quick-bets">
+          <button class="quick-btn" onclick="selectBetAmount(100, event)">+100</button>
+          <button class="quick-btn" onclick="selectBetAmount(500, event)">+500</button>
+          <button class="quick-btn" onclick="selectBetAmount(1000, event)">+1 000</button>
+          <button class="quick-btn" onclick="selectBetAmount('MAX', event)">MAX</button>
+        </div>
+
+        <div class="bet-input-row">
+          <input type="number" class="bet-input" id="betAmount" value="100" min="1">
+        </div>
+      </div>
+
+      <button class="primary-btn" id="actionBtn" onclick="onActionClick()">TIKISH</button>
+
+      <div class="game-subtitle">Multiplikator o'sib boradi — istalgan vaqtda "Naqd olish" tugmasini bosib yutuqni qo'lga kiriting. Kechikib qolsangiz — portlaydi va tikkan pulingiz kuyadi.</div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const canvas = document.getElementById('crashCanvas');
+    const ctx = canvas.getContext('2d');
+    const multLabel = document.getElementById('multLabel');
+    const statusLine = document.getElementById('statusLine');
+    const actionBtn = document.getElementById('actionBtn');
+    const activeBetLabel = document.getElementById('activeBetLabel');
+
+    let phase = 'waiting'; // waiting | flying | crashed
+    let multiplier = 1.00;
+    let crashPoint = 2.0;
+    let startTime = null;
+    let rafId = null;
+    let countdownId = null;
+    let currentStakeInfo = null;
+    let hasCashedOut = false;
+    let betAmount = 100;
+
+    function showToast(msg, type) {
+      const t = document.getElementById('toast');
+      t.innerText = msg;
+      t.className = 'toast show ' + (type || '');
+      if (window.skzOnToast) window.skzOnToast(type);
+      setTimeout(() => t.classList.remove('show'), 1800);
+    }
+
+    function selectBetAmount(amount, ev) {
+      betAmount = amount === 'MAX' ? skzGetBalance() : amount;
+      document.getElementById('betAmount').value = betAmount;
+      document.querySelectorAll('.quick-btn').forEach(btn => btn.classList.remove('active'));
+      if (ev) ev.target.classList.add('active');
+    }
+
+    document.getElementById('betAmount').addEventListener('input', (e) => {
+      betAmount = parseInt(e.target.value) || 0;
+    });
+
+    // Provably-fair uslubdagi crash nuqtasi generatori (soddalashtirilgan)
+    function generateCrashPoint() {
+      const r = Math.random();
+      // ~3% instant crash, uzun quyruqli taqsimot
+      if (r < 0.03) return 1.00;
+      const houseEdge = 0.97;
+      const point = houseEdge / (1 - r);
+      return Math.min(point, 1000);
+    }
+
+    function resetChart() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+
+    function drawChart(elapsedRatio) {
+      resetChart();
+      ctx.strokeStyle = phase === 'crashed' ? '#ef4444' : '#2f6fed';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      const w = canvas.width, h = canvas.height;
+      const points = 60;
+      ctx.moveTo(0, h);
+      for (let i = 0; i <= points; i++) {
+        const t = (i / points) * elapsedRatio;
+        const x = t * w;
+        const m = 1 + Math.pow(t * 6, 1.6);
+        const y = h - Math.min(m / 12, 1) * (h - 20);
+        ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+    }
+
+    function onActionClick() {
+      if (phase === 'waiting') {
+        if (!skzGiftBetCanPlace(betAmount)) {
+          showToast(skzStake.mode === 'gift' ? "Avval sovg'a tanlang!" : "Balansingizda mablag' yetarli emas!", 'lose');
+          return;
+        }
+        currentStakeInfo = skzGiftBetConsume(betAmount);
+        hasCashedOut = false;
+        activeBetLabel.innerHTML = currentStakeInfo.mode === 'gift'
+          ? `🎁 ${currentStakeInfo.stakedItem.name}`
+          : `${skzFmt(currentStakeInfo.value)} 💎`;
+        document.getElementById('cashControls').style.display = 'none';
+        actionBtn.disabled = true;
+        actionBtn.innerText = "KUTILMOQDA...";
+      } else if (phase === 'flying' && currentStakeInfo && !hasCashedOut) {
+        cashOut();
+      }
+    }
+
+    function cashOut() {
+      hasCashedOut = true;
+      const outcome = skzGiftBetResolveWin(currentStakeInfo, multiplier);
+      if (outcome.type === 'gift') {
+        showToast(`💰 Naqd oldingiz! ${outcome.from.name} → ${outcome.gift.name} 🎁 (${multiplier.toFixed(2)}x)`, 'win');
+      } else {
+        showToast(`💰 Naqd oldingiz! +${skzFmt(outcome.amount)} 💎 (${multiplier.toFixed(2)}x)`, 'win');
+      }
+      actionBtn.disabled = true;
+      actionBtn.innerText = "NAQD OLINDI ✔";
+    }
+
+    function startWaitPhase() {
+      phase = 'waiting';
+      currentStakeInfo = null;
+      hasCashedOut = false;
+      activeBetLabel.innerText = '— 💎';
+      multiplier = 1.00;
+      multLabel.innerText = '1.00x';
+      multLabel.className = 'crash-mult-label';
+      resetChart();
+      actionBtn.disabled = false;
+      actionBtn.innerText = 'TIKISH';
+      actionBtn.className = 'primary-btn';
+      if (skzStake.mode !== 'gift') document.getElementById('cashControls').style.display = 'block';
+
+      let countdown = 5;
+      statusLine.innerText = `Keyingi tur ${countdown}s dan keyin...`;
+      countdownId = setInterval(() => {
+        countdown -= 1;
+        statusLine.innerText = `Keyingi tur ${countdown}s dan keyin...`;
+        if (countdown <= 0) {
+          clearInterval(countdownId);
+          startFlyPhase();
+        }
+      }, 1000);
+    }
+
+    function startFlyPhase() {
+      phase = 'flying';
+      crashPoint = generateCrashPoint();
+      startTime = performance.now();
+      statusLine.innerText = 'Uchmoqda...';
+      multLabel.className = 'crash-mult-label flying';
+      if (currentStakeInfo) {
+        actionBtn.disabled = false;
+        actionBtn.innerText = 'NAQD OLISH 💰';
+        actionBtn.className = 'primary-btn blue';
+      }
+      tick();
+    }
+
+    function tick() {
+      const elapsed = (performance.now() - startTime) / 1000;
+      multiplier = 1 + Math.pow(elapsed, 1.55) * 0.18;
+
+      if (multiplier >= crashPoint) {
+        multiplier = crashPoint;
+        endRound();
+        return;
+      }
+
+      multLabel.innerText = multiplier.toFixed(2) + 'x';
+      drawChart(Math.min(elapsed / 6, 1));
+      rafId = requestAnimationFrame(tick);
+    }
+
+    function endRound() {
+      cancelAnimationFrame(rafId);
+      phase = 'crashed';
+      multLabel.innerText = multiplier.toFixed(2) + 'x';
+      multLabel.className = 'crash-mult-label crashed';
+      drawChart(1);
+      statusLine.innerText = `💥 Portladi ${multiplier.toFixed(2)}x da!`;
+
+      const hist = document.getElementById('history');
+      const div = document.createElement('div');
+      div.className = 'history-item';
+      div.style.color = multiplier < 2 ? '#ef4444' : '#2f6fed';
+      div.innerText = multiplier.toFixed(2) + 'x';
+      hist.prepend(div);
+      if (hist.children.length > 10) hist.removeChild(hist.lastChild);
+
+      if (currentStakeInfo && !hasCashedOut) {
+        const outcome = skzGiftBetResolveLose(currentStakeInfo);
+        showToast(outcome.type === 'gift-lost' ? `💥 ${outcome.from.name} kuydi!` : `💥 Yutqazdingiz! -${skzFmt(outcome.amount)} 💎`, 'lose');
+      }
+
+      actionBtn.disabled = true;
+
+      setTimeout(startWaitPhase, 2500);
+    }
+
+    window.onload = () => {
+      startWaitPhase();
+      skzGiftBetInitUI('stakeMode', () => {
+        if (phase === 'waiting') {
+          document.getElementById('cashControls').style.display = skzStake.mode === 'gift' ? 'none' : 'block';
+        }
+      });
+    };
+  </script>
+</body>
+</html>

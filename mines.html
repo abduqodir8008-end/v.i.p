@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>COFEATURE - Mines</title>
+<link rel="stylesheet" href="styles.css">
+<script src="balance.js" defer></script>
+<script src="vip.js" defer></script>
+<script src="referral.js" defer></script>
+<script src="gifts.js" defer></script>
+<script src="giftbet.js" defer></script>
+<script src="extras.js" defer></script>
+<script src="shell.js" defer></script>
+<script src="daily.js" defer></script>
+<script src="social.js" defer></script>
+<style>
+  .mines-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 8px;
+    width: 100%;
+    margin: 16px 0 20px;
+  }
+  .mine-tile {
+    aspect-ratio: 1 / 1;
+    background: var(--bg-card);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    cursor: pointer;
+    transition: transform 0.1s, background 0.2s, border-color 0.2s;
+  }
+  .mine-tile:hover:not(.revealed) { border-color: rgba(255,255,255,0.3); transform: translateY(-2px); }
+  .mine-tile.revealed.gem { background: rgba(47, 111, 237, 0.15); border-color: rgba(47, 111, 237, 0.4); }
+  .mine-tile.revealed.bomb { background: rgba(239,68,68,0.2); border-color: rgba(239,68,68,0.6); }
+  .mine-tile.disabled { cursor: not-allowed; }
+
+  .mines-config {
+    display: flex;
+    gap: 10px;
+    width: 100%;
+    margin-bottom: 14px;
+  }
+  .config-select {
+    flex: 1;
+    background: var(--bg-card);
+    border: 1px solid rgba(255,255,255,0.1);
+    color: #fff;
+    padding: 12px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 700;
+  }
+  .stats-row {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    background: var(--bg-card);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 12px;
+    padding: 10px 14px;
+    font-size: 13px;
+    margin-bottom: 14px;
+    color: #cbd5e1;
+  }
+  .stats-row b { color: var(--accent); }
+</style>
+</head>
+<body>
+
+  <div class="topbar">
+    <div class="topbar-left">
+      <a class="back-btn" href="index.html">⬅ Lobbi</a>
+      <div class="brand">💣 MINES</div>
+    </div>
+    <div class="balance-pill">💎 <span class="js-balance">0</span></div>
+  </div>
+
+  <div class="game-page-wrap">
+    <div class="app-container">
+
+      <div class="game-heading">💣 COFEATURE MINES</div>
+      <div class="game-subtitle">Bombasiz katakchalarni oching, ko'proq ochsangiz — multiplikator o'sadi. Bombaga tushsangiz — tikkan pulingiz kuyadi.</div>
+
+      <div id="stakeMode"></div>
+
+      <div class="mines-config">
+        <select class="config-select" id="mineCount">
+          <option value="3">3 bomba</option>
+          <option value="5" selected>5 bomba</option>
+          <option value="10">10 bomba</option>
+          <option value="15">15 bomba</option>
+        </select>
+        <input type="number" class="bet-input" id="betAmount" value="100" min="1" style="flex:1;">
+      </div>
+      <div id="cashBetHint" style="font-size:11px; color:var(--text-muted); margin:-8px 0 12px;">Miqdorni kiriting (faqat 💎 rejimida).</div>
+
+      <div class="stats-row">
+        <span>Joriy multiplikator: <b id="currentMult">1.00x</b></span>
+        <span>Bo'lishi mumkin: <b id="potentialWin">0 💎</b></span>
+      </div>
+
+      <div class="mines-grid" id="minesGrid"></div>
+
+      <button class="primary-btn" id="mainBtn" onclick="onMainBtn()">O'YINNI BOSHLASH</button>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const GRID_SIZE = 25;
+    let mineCount = 5;
+    let bombs = new Set();
+    let revealed = new Set();
+    let gameActive = false;
+    let betAmount = 100;
+    let currentMultiplier = 1;
+    let currentStakeInfo = null;
+
+    function showToast(msg, type) {
+      const t = document.getElementById('toast');
+      t.innerText = msg;
+      t.className = 'toast show ' + (type || '');
+      if (window.skzOnToast) window.skzOnToast(type);
+      setTimeout(() => t.classList.remove('show'), 1800);
+    }
+
+    function buildGrid() {
+      const grid = document.getElementById('minesGrid');
+      grid.innerHTML = '';
+      for (let i = 0; i < GRID_SIZE; i++) {
+        const tile = document.createElement('div');
+        tile.className = 'mine-tile';
+        tile.dataset.idx = i;
+        tile.onclick = () => onTileClick(i, tile);
+        grid.appendChild(tile);
+      }
+    }
+
+    function placeBombs(count) {
+      bombs = new Set();
+      while (bombs.size < count) {
+        bombs.add(Math.floor(Math.random() * GRID_SIZE));
+      }
+    }
+
+    // Har bir ochilgan gem uchun multiplikator: bombalar soniga qarab o'sadi
+    function calcMultiplier(revealedCount, mines) {
+      const safeTiles = GRID_SIZE - mines;
+      let mult = 1;
+      for (let i = 0; i < revealedCount; i++) {
+        mult *= (GRID_SIZE - i) / (safeTiles - i);
+      }
+      return mult * 0.97; // house edge
+    }
+
+    function updateStats() {
+      currentMultiplier = calcMultiplier(revealed.size, mineCount);
+      document.getElementById('currentMult').innerText = currentMultiplier.toFixed(2) + 'x';
+      const stakeValue = currentStakeInfo ? currentStakeInfo.value : betAmount;
+      document.getElementById('potentialWin').innerText = skzFmt(stakeValue * currentMultiplier) + ' 💎';
+    }
+
+    function onMainBtn() {
+      if (!gameActive) {
+        // start
+        betAmount = parseInt(document.getElementById('betAmount').value) || 0;
+        mineCount = parseInt(document.getElementById('mineCount').value);
+        if (!skzGiftBetCanPlace(betAmount)) {
+          showToast(skzStake.mode === 'gift' ? "Avval sovg'a tanlang!" : "Balansingizda mablag' yetarli emas!", 'lose');
+          return;
+        }
+        currentStakeInfo = skzGiftBetConsume(betAmount);
+        placeBombs(mineCount);
+        revealed = new Set();
+        gameActive = true;
+        buildGrid();
+        document.getElementById('mineCount').disabled = true;
+        document.getElementById('betAmount').disabled = true;
+        document.getElementById('stakeMode').style.opacity = '0.4';
+        document.getElementById('stakeMode').style.pointerEvents = 'none';
+        updateStats();
+        document.getElementById('mainBtn').innerText = 'NAQD OLISH 💰';
+        document.getElementById('mainBtn').className = 'primary-btn blue';
+      } else {
+        // cash out
+        if (revealed.size === 0) {
+          showToast("Avval kamida bitta katakcha oching!", 'lose');
+          return;
+        }
+        const outcome = skzGiftBetResolveWin(currentStakeInfo, currentMultiplier);
+        if (outcome.type === 'gift') {
+          showToast(`💰 Naqd oldingiz! ${outcome.from.name} → ${outcome.gift.name} 🎁`, 'win');
+        } else {
+          showToast(`💰 Naqd oldingiz! +${skzFmt(outcome.amount)} 💎`, 'win');
+        }
+        endGame(false);
+      }
+    }
+
+    function onTileClick(idx, tile) {
+      if (!gameActive || revealed.has(idx)) return;
+
+      if (bombs.has(idx)) {
+        tile.classList.add('revealed', 'bomb');
+        tile.innerText = '💣';
+        // reveal all bombs
+        bombs.forEach(b => {
+          const t = document.querySelector(`.mine-tile[data-idx="${b}"]`);
+          if (t) { t.classList.add('revealed', 'bomb'); t.innerText = '💣'; }
+        });
+        const outcome = skzGiftBetResolveLose(currentStakeInfo);
+        showToast(outcome.type === 'gift-lost' ? `💥 Portladi! ${outcome.from.name} kuydi!` : `💥 Portladi! -${skzFmt(outcome.amount)} 💎`, 'lose');
+        endGame(true);
+        return;
+      }
+
+      revealed.add(idx);
+      tile.classList.add('revealed', 'gem');
+      tile.innerText = '💎';
+      updateStats();
+
+      if (revealed.size === GRID_SIZE - mineCount) {
+        const outcome = skzGiftBetResolveWin(currentStakeInfo, currentMultiplier);
+        if (outcome.type === 'gift') {
+          showToast(`🎉 Barcha xazinalar topildi! ${outcome.from.name} → ${outcome.gift.name} 🎁`, 'win');
+        } else {
+          showToast(`🎉 Barcha xazinalar topildi! +${skzFmt(outcome.amount)} 💎`, 'win');
+        }
+        endGame(false);
+      }
+    }
+
+    function endGame(showBombs) {
+      gameActive = false;
+      currentStakeInfo = null;
+      document.querySelectorAll('.mine-tile').forEach(t => t.classList.add('disabled'));
+      document.getElementById('mineCount').disabled = false;
+      document.getElementById('betAmount').disabled = false;
+      document.getElementById('stakeMode').style.opacity = '1';
+      document.getElementById('stakeMode').style.pointerEvents = 'auto';
+      document.getElementById('mainBtn').innerText = 'O\'YINNI BOSHLASH';
+      document.getElementById('mainBtn').className = 'primary-btn';
+      document.getElementById('currentMult').innerText = '1.00x';
+      document.getElementById('potentialWin').innerText = '0 💎';
+    }
+
+    window.onload = () => {
+      buildGrid();
+      skzGiftBetInitUI('stakeMode');
+    };
+  </script>
+</body>
+</html>

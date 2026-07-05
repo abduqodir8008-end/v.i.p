@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>COFEATURE - Inventar</title>
+<link rel="stylesheet" href="styles.css">
+<script src="balance.js" defer></script>
+<script src="vip.js" defer></script>
+<script src="referral.js" defer></script>
+<script src="gifts.js" defer></script>
+<script src="extras.js" defer></script>
+<script src="shell.js" defer></script>
+<script src="daily.js" defer></script>
+<script src="social.js" defer></script>
+<style>
+  .inv-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    margin-bottom: 16px;
+    gap: 10px;
+  }
+  .inv-total {
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+  .inv-total b { color: var(--accent-amber); }
+  .sell-all-btn {
+    background: var(--accent-red);
+    color: #fff;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 12px;
+    font-weight: 800;
+    font-size: 12.5px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .sell-all-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .inv-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+    gap: 12px;
+    width: 100%;
+  }
+  .inv-item {
+    background: var(--bg-card);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 14px;
+    padding: 12px 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+  }
+  .inv-item .gift-icon-wrap { width: 56px; height: 56px; border-radius: 12px; display: flex; align-items: center; justify-content: center; }
+  .inv-item .gift-icon-wrap svg { width: 34px; height: 34px; }
+  .inv-item-name { font-size: 10.5px; font-weight: 700; text-align: center; color: #cbd5e1; line-height: 1.25; min-height: 26px; }
+  .inv-item-value { font-size: 11px; font-weight: 800; color: var(--accent-amber); }
+  .inv-item-sell {
+    width: 100%;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
+    color: #fff;
+    padding: 6px;
+    border-radius: 8px;
+    font-size: 10.5px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .inv-item-sell:hover { background: var(--accent); color: #000; }
+
+  .inv-empty {
+    width: 100%;
+    text-align: center;
+    padding: 50px 20px;
+    color: var(--text-muted);
+    font-size: 13px;
+  }
+  .inv-empty .big { font-size: 40px; margin-bottom: 10px; }
+
+  .withdraw-all-btn {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.12);
+    color: #e2e8f0;
+    padding: 10px 16px;
+    border-radius: 12px;
+    font-weight: 800;
+    font-size: 12.5px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .withdraw-all-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .withdraw-all-btn:hover:not(:disabled) { background: rgba(255,255,255,0.12); }
+
+  .inv-item-actions { display: flex; flex-direction: column; gap: 5px; width: 100%; }
+  .inv-item-withdraw {
+    width: 100%;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid var(--accent);
+    color: var(--accent-blue);
+    padding: 6px;
+    border-radius: 8px;
+    font-size: 10.5px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .inv-item-withdraw:hover { background: var(--accent); color: #fff; }
+
+  .inv-item-send {
+    width: 100%;
+    background: rgba(168,85,247,0.12);
+    border: 1px solid var(--accent-purple);
+    color: var(--accent-purple);
+    padding: 6px;
+    border-radius: 8px;
+    font-size: 10.5px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .inv-item-send:hover { background: var(--accent-purple); color: #fff; }
+
+  .withdraw-history {
+    width: 100%;
+    margin-top: 26px;
+  }
+  .withdraw-history-title {
+    font-size: 13px;
+    font-weight: 800;
+    color: #cbd5e1;
+    margin-bottom: 10px;
+  }
+  .withdraw-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--bg-card);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 12px;
+    padding: 9px 12px;
+    margin-bottom: 8px;
+  }
+  .withdraw-row .gift-icon-wrap { width: 34px; height: 34px; border-radius: 9px; flex-shrink: 0; display:flex; align-items:center; justify-content:center; }
+  .withdraw-row .gift-icon-wrap svg { width: 20px; height: 20px; }
+  .withdraw-row-name { font-size: 12px; font-weight: 700; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .withdraw-status {
+    font-size: 10.5px;
+    font-weight: 800;
+    padding: 4px 9px;
+    border-radius: 20px;
+    background: rgba(245, 158, 11, 0.15);
+    color: var(--accent-amber);
+    white-space: nowrap;
+  }
+</style>
+</head>
+<body>
+
+  <div class="topbar">
+    <div class="topbar-left">
+      <a class="back-btn" href="index.html">⬅ Lobbi</a>
+      <div class="brand">🎒 INVENTAR</div>
+    </div>
+    <div class="balance-pill">💎 <span class="js-balance">0</span></div>
+  </div>
+
+  <div class="game-page-wrap">
+    <div class="app-container" style="max-width: 640px; align-items: stretch;">
+
+      <div class="game-heading">🎒 MENING INVENTARIM</div>
+      <div class="game-subtitle">Keyslardan chiqqan sovg'alaringiz shu yerda saqlanadi. Ularni sotib balansga aylantiring yoki Apgreyderda tavakkal qiling.</div>
+
+      <div class="inv-toolbar">
+        <div class="inv-total">Jami qiymat: <b id="invTotal">0 💎</b></div>
+        <div style="display:flex; gap:8px;">
+          <button class="withdraw-all-btn" id="withdrawAllBtn" onclick="onWithdrawAll()">📤 Hammasini yechib olish</button>
+          <button class="sell-all-btn" id="sellAllBtn" onclick="onSellAll()">💰 Hammasini sotish</button>
+        </div>
+      </div>
+
+      <div class="inv-grid" id="invGrid"></div>
+      <div class="inv-empty" id="invEmpty" style="display:none;">
+        <div class="big">🎁</div>
+        <div>Inventaringiz bo'sh. <a href="cases.html" style="color:var(--accent);">Keyslarni oching</a>!</div>
+      </div>
+
+      <div class="withdraw-history" id="withdrawHistory" style="display:none;">
+        <div class="withdraw-history-title">📤 Yechib olish so'rovlari</div>
+        <div id="withdrawList"></div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    function showToast(msg, type) {
+      const t = document.getElementById('toast');
+      t.innerText = msg;
+      t.className = 'toast show ' + (type || '');
+      setTimeout(() => t.classList.remove('show'), 1800);
+    }
+
+    function renderInventory() {
+      const items = skzGetInventory();
+      const grid = document.getElementById('invGrid');
+      const empty = document.getElementById('invEmpty');
+      const sellAllBtn = document.getElementById('sellAllBtn');
+
+      const total = items.reduce((s, i) => s + i.value, 0);
+      document.getElementById('invTotal').innerText = skzFmt(total) + ' 💎';
+      sellAllBtn.disabled = items.length === 0;
+      document.getElementById('withdrawAllBtn').disabled = items.length === 0;
+
+      if (items.length === 0) {
+        grid.style.display = 'none';
+        empty.style.display = 'block';
+      } else {
+        grid.style.display = 'grid';
+        empty.style.display = 'none';
+
+        grid.innerHTML = items.map(item => `
+          <div class="inv-item">
+            <div class="gift-icon-wrap rarity-${item.rarity}">${skzGiftImg(item.file, item.name)}</div>
+            <div class="inv-item-name">${item.name}</div>
+            <div class="inv-item-value">💎 ${skzFmt(item.value)}</div>
+            <div class="inv-item-actions">
+              <button class="inv-item-sell" onclick="onSellOne('${item.id}')">Sotish</button>
+              <button class="inv-item-withdraw" onclick="onWithdrawOne('${item.id}')">Yechib olish</button>
+              <button class="inv-item-send" onclick="skzShowGiftModal('send')">🎁 Do'stga</button>
+            </div>
+          </div>
+        `).join('');
+      }
+
+      renderWithdrawHistory();
+    }
+
+    function renderWithdrawHistory() {
+      const list = skzGetWithdrawals();
+      const box = document.getElementById('withdrawHistory');
+      const listEl = document.getElementById('withdrawList');
+      if (list.length === 0) {
+        box.style.display = 'none';
+        return;
+      }
+      box.style.display = 'block';
+      listEl.innerHTML = list.map(item => `
+        <div class="withdraw-row">
+          <div class="gift-icon-wrap rarity-${item.rarity}">${skzGiftImg(item.file, item.name)}</div>
+          <div class="withdraw-row-name">${item.name}</div>
+          <div class="withdraw-status">⏳ Kutilmoqda</div>
+        </div>
+      `).join('');
+    }
+
+    function onSellOne(id) {
+      const amount = skzSellItem(id);
+      if (amount > 0) {
+        showToast(`💰 Sotildi! +${skzFmt(amount)} 💎`, 'win');
+        renderInventory();
+      }
+    }
+
+    function onSellAll() {
+      const total = skzSellAllInventory();
+      if (total > 0) {
+        showToast(`💰 Barchasi sotildi! +${skzFmt(total)} 💎`, 'win');
+      }
+      renderInventory();
+    }
+
+    function onWithdrawOne(id) {
+      if (!confirm("Ushbu sovg'ani yechib olish so'rovini yubormoqchimisiz? Sovg'a inventardan olinadi va so'rov \"Kutilmoqda\" holatiga o'tadi.")) return;
+      const record = skzWithdrawItem(id);
+      if (record) {
+        showToast(`📤 So'rov yuborildi: ${record.name}`, 'win');
+        renderInventory();
+      }
+    }
+
+    function onWithdrawAll() {
+      const items = skzGetInventory();
+      if (items.length === 0) return;
+      if (!confirm("Inventardagi barcha sovg'alarni yechib olish uchun so'rov yuborilsinmi?")) return;
+      const records = skzWithdrawAllInventory();
+      showToast(`📤 ${records.length} ta so'rov yuborildi`, 'win');
+      renderInventory();
+    }
+
+    window.onload = renderInventory;
+  </script>
+</body>
+</html>

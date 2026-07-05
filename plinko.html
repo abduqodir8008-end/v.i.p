@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>COFEATURE - Plinko</title>
+<link rel="stylesheet" href="styles.css">
+<script src="balance.js" defer></script>
+<script src="vip.js" defer></script>
+<script src="referral.js" defer></script>
+<script src="gifts.js" defer></script>
+<script src="giftbet.js" defer></script>
+<script src="extras.js" defer></script>
+<script src="shell.js" defer></script>
+<script src="daily.js" defer></script>
+<script src="social.js" defer></script>
+<style>
+  .plinko-board-wrap {
+    width: 100%;
+    background: #0d131f;
+    border-radius: 16px;
+    border: 1px solid rgba(255,255,255,0.06);
+    margin-bottom: 16px;
+    overflow: hidden;
+  }
+  #plinkoCanvas { width: 100%; height: 380px; display: block; }
+  .risk-row { display: flex; gap: 8px; width: 100%; margin-bottom: 14px; }
+  .risk-btn {
+    flex: 1;
+    background: var(--bg-card);
+    border: 1px solid rgba(255,255,255,0.08);
+    color: #cbd5e1;
+    padding: 10px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .risk-btn.active { background: var(--accent-purple); color: #fff; border-color: var(--accent-purple); }
+</style>
+</head>
+<body>
+
+  <div class="topbar">
+    <div class="topbar-left">
+      <a class="back-btn" href="index.html">⬅ Lobbi</a>
+      <div class="brand">🟣 PLINKO</div>
+    </div>
+    <div class="balance-pill">💎 <span class="js-balance">0</span></div>
+  </div>
+
+  <div class="game-page-wrap">
+    <div class="app-container" style="max-width: 480px;">
+
+      <div class="plinko-board-wrap">
+        <canvas id="plinkoCanvas" width="440" height="380"></canvas>
+      </div>
+
+      <div class="risk-row">
+        <button class="risk-btn" onclick="setRisk('low', event)">Past</button>
+        <button class="risk-btn active" onclick="setRisk('medium', event)">O'rta</button>
+        <button class="risk-btn" onclick="setRisk('high', event)">Yuqori</button>
+      </div>
+
+      <div id="stakeMode"></div>
+
+      <div id="cashControls">
+        <div class="quick-bets">
+          <button class="quick-btn" onclick="selectBetAmount(50, event)">+50</button>
+          <button class="quick-btn" onclick="selectBetAmount(200, event)">+200</button>
+          <button class="quick-btn" onclick="selectBetAmount(500, event)">+500</button>
+          <button class="quick-btn" onclick="selectBetAmount('MAX', event)">MAX</button>
+        </div>
+
+        <div class="bet-input-row">
+          <input type="number" class="bet-input" id="betAmount" value="100" min="1">
+        </div>
+      </div>
+
+      <button class="primary-btn" id="dropBtn" onclick="dropBall()">SHARIKNI TASHLASH</button>
+
+      <div class="game-subtitle">Sharik pastga tushayotganda pinlarga urilib chapga yoki o'ngga sakraydi. Qaysi katakka tushsa — shu multiplikator qo'llanadi.</div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const canvas = document.getElementById('plinkoCanvas');
+    const ctx = canvas.getContext('2d');
+    const ROWS = 12;
+    const W = canvas.width, H = canvas.height;
+    const topPad = 30, bottomPad = 50;
+    const pinSpacingY = (H - topPad - bottomPad) / ROWS;
+
+    const MULTS = {
+      low:    [1.5, 1.3, 1.1, 1.0, 0.7, 0.5, 0.7, 1.0, 1.1, 1.3, 1.5],
+      medium: [3, 2, 1.2, 0.8, 0.4, 0.2, 0.4, 0.8, 1.2, 2, 3],
+      high:   [10, 4, 1.5, 0.5, 0.2, 0.1, 0.2, 0.5, 1.5, 4, 10]
+    };
+    let risk = 'medium';
+    let betAmount = 100;
+    let animating = false;
+
+    function showToast(msg, type) {
+      const t = document.getElementById('toast');
+      t.innerText = msg;
+      t.className = 'toast show ' + (type || '');
+      if (window.skzOnToast) window.skzOnToast(type);
+      setTimeout(() => t.classList.remove('show'), 2000);
+    }
+
+    function setRisk(r, ev) {
+      risk = r;
+      document.querySelectorAll('.risk-btn').forEach(b => b.classList.remove('active'));
+      if (ev) ev.target.classList.add('active');
+      drawBoard();
+    }
+
+    function selectBetAmount(amount, ev) {
+      betAmount = amount === 'MAX' ? skzGetBalance() : amount;
+      document.getElementById('betAmount').value = betAmount;
+      document.querySelectorAll('.quick-bets .quick-btn').forEach(btn => btn.classList.remove('active'));
+      if (ev) ev.target.classList.add('active');
+    }
+
+    document.getElementById('betAmount').addEventListener('input', (e) => {
+      betAmount = parseInt(e.target.value) || 0;
+    });
+
+    function pinX(row, col) {
+      const pinsInRow = row + 3;
+      const totalWidth = (pinsInRow - 1) * 30;
+      const startX = W / 2 - totalWidth / 2;
+      return startX + col * 30;
+    }
+
+    function drawBoard(ballPos, ballPath) {
+      ctx.clearRect(0, 0, W, H);
+
+      // pins
+      ctx.fillStyle = 'rgba(255,255,255,0.35)';
+      for (let row = 0; row < ROWS; row++) {
+        const y = topPad + row * pinSpacingY;
+        const pinsInRow = row + 3;
+        for (let col = 0; col < pinsInRow; col++) {
+          const x = pinX(row, col);
+          ctx.beginPath();
+          ctx.arc(x, y, 3.5, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+
+      // slots
+      const mults = MULTS[risk];
+      const slotWidth = W / mults.length;
+      mults.forEach((m, i) => {
+        const hue = m >= 2 ? '#f59e0b' : (m >= 1 ? '#2f6fed' : '#ef4444');
+        ctx.fillStyle = hue;
+        ctx.fillRect(i * slotWidth + 2, H - bottomPad + 10, slotWidth - 4, 28);
+        ctx.fillStyle = '#0b0f17';
+        ctx.font = 'bold 11px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(m + 'x', i * slotWidth + slotWidth / 2, H - bottomPad + 28);
+      });
+
+      // path trail
+      if (ballPath && ballPath.length > 1) {
+        ctx.strokeStyle = 'rgba(168,85,247,0.3)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(ballPath[0].x, ballPath[0].y);
+        ballPath.forEach(p => ctx.lineTo(p.x, p.y));
+        ctx.stroke();
+      }
+
+      // ball
+      if (ballPos) {
+        ctx.fillStyle = '#a855f7';
+        ctx.shadowColor = '#a855f7';
+        ctx.shadowBlur = 12;
+        ctx.beginPath();
+        ctx.arc(ballPos.x, ballPos.y, 7, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+      }
+    }
+
+    function dropBall() {
+      if (animating) return;
+      if (!skzGiftBetCanPlace(betAmount)) {
+        showToast(skzStake.mode === 'gift' ? "Avval sovg'a tanlang!" : "Balansingizda mablag' yetarli emas!", 'lose');
+        return;
+      }
+      const stakeInfo = skzGiftBetConsume(betAmount);
+      animating = true;
+      document.getElementById('dropBtn').disabled = true;
+
+      // Simulate path: random left/right decision at each row
+      const mults = MULTS[risk];
+      let position = 0; // net right moves - left moves, ranges -ROWS..+ROWS
+
+      const decisions = [];
+      for (let i = 0; i < ROWS; i++) {
+        const goRight = Math.random() < 0.5;
+        decisions.push(goRight ? 1 : -1);
+        position += goRight ? 1 : -1;
+      }
+
+      // Map final position to a slot index (0..mults.length-1)
+      const slotCount = mults.length;
+      const mid = Math.floor(slotCount / 2);
+      let slotIndex = mid + Math.round(position / 2);
+      slotIndex = Math.max(0, Math.min(slotCount - 1, slotIndex));
+
+      // Animate ball following decisions
+      const path = [];
+      let step = 0;
+      let curCol = 0;
+
+      function animate() {
+        if (step > ROWS) {
+          finish();
+          return;
+        }
+        const y = topPad + step * pinSpacingY;
+        curCol += step === 0 ? 0 : decisions[step - 1] * 0.5;
+        const x = W / 2 + curCol * 15;
+        path.push({ x, y });
+        drawBoard({ x, y }, path);
+        step++;
+        setTimeout(() => requestAnimationFrame(animate), 90);
+      }
+
+      function finish() {
+        const finalMult = mults[slotIndex];
+        const outcome = skzGiftBetResolveWin(stakeInfo, finalMult);
+        const msgPrefix = finalMult >= 1 ? '🎉' : '😬';
+        if (outcome.type === 'gift') {
+          showToast(`${msgPrefix} ${finalMult}x! ${outcome.from.name} → ${outcome.gift.name} 🎁`, finalMult >= 1 ? 'win' : 'lose');
+        } else {
+          showToast(`${msgPrefix} ${finalMult}x! +${skzFmt(outcome.amount)} 💎`, finalMult >= 1 ? 'win' : 'lose');
+        }
+        animating = false;
+        document.getElementById('dropBtn').disabled = false;
+        setTimeout(() => drawBoard(), 1200);
+      }
+
+      requestAnimationFrame(animate);
+    }
+
+    window.onload = () => {
+      drawBoard();
+      skzGiftBetInitUI('stakeMode', () => {
+        document.getElementById('cashControls').style.display = skzStake.mode === 'gift' ? 'none' : 'block';
+      });
+    };
+  </script>
+</body>
+</html>

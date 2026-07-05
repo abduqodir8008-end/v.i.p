@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>COFEATURE - Profil</title>
+<link rel="stylesheet" href="styles.css">
+<script src="balance.js" defer></script>
+<script src="vip.js" defer></script>
+<script src="referral.js" defer></script>
+<script src="gifts.js" defer></script>
+<script src="extras.js" defer></script>
+<script src="shell.js" defer></script>
+<script src="daily.js" defer></script>
+<script src="social.js" defer></script>
+<style>
+  .profile-section-title {
+    width: 100%;
+    font-weight: 800;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-muted);
+    margin: 6px 0 10px;
+  }
+</style>
+</head>
+<body>
+
+  <div class="topbar">
+    <div class="topbar-left">
+      <a class="back-btn" href="index.html">⬅ Lobbi</a>
+      <div class="brand">📊 PROFIL</div>
+    </div>
+    <div class="balance-pill">💎 <span class="js-balance">0</span></div>
+  </div>
+
+  <div class="game-page-wrap">
+    <div class="app-container">
+
+      <div class="profile-header" id="profileHeader"></div>
+
+      <div class="profile-section-title">🎖️ VIP Daraja</div>
+      <div class="vip-card" id="vipCard"></div>
+
+      <div class="profile-section-title">🤝 Do'stlarni taklif qilish</div>
+      <div class="ref-card" id="refCard"></div>
+
+      <div class="profile-section-title">📊 Statistika</div>
+      <div class="stats-grid" id="statsGrid"></div>
+
+      <div class="profile-section-title" id="achvSectionTitle">🎖️ Yutuqlar</div>
+      <div class="achv-grid" id="achvGrid"></div>
+
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    function showToast(msg, type) {
+      const t = document.getElementById('toast');
+      t.innerText = msg;
+      t.className = 'toast show ' + (type || '');
+      if (window.skzOnToast) window.skzOnToast(type);
+      setTimeout(() => t.classList.remove('show'), 2000);
+    }
+
+    function renderProfileHeader() {
+      const user = skzGetUser();
+      const initials = user ? (user.first[0] + (user.last[0] || '')).toUpperCase() : '?';
+      const fullName = user ? `${user.first} ${user.last}` : '—';
+      document.getElementById('profileHeader').innerHTML = `
+        <div class="profile-header-avatar">${user && user.avatar ? `<img src="${user.avatar}" alt="avatar">` : initials}</div>
+        <div>
+          <div class="profile-header-name">${fullName}</div>
+          <div class="profile-header-sub">💎 ${skzFmt(skzGetBalance())} balans</div>
+        </div>
+      `;
+    }
+
+    function renderVipCard() {
+      const { tier, next, pct, into, span } = skzVipProgress();
+      document.getElementById('vipCard').innerHTML = `
+        <div class="vip-card-top">
+          <div class="vip-card-title">🏅 ${tier.name} (Lv.${tier.level})</div>
+          <div style="font-size:12px; color:var(--text-muted);">${next ? skzFmt(into) + ' / ' + skzFmt(span) + ' XP' : 'Maksimal daraja!'}</div>
+        </div>
+        <div class="vip-bar-track"><div class="vip-bar-fill" style="width:${pct}%;"></div></div>
+        ${tier.dailyBonusPct ? `<div class="vip-perk-note">✨ Joriy imtiyoz: kunlik bonusga +${tier.dailyBonusPct}%</div>` : `<div class="vip-perk-note">Keyingi darajalarda kunlik bonusga foizli qo'shimchalar ochiladi.</div>`}
+        ${next ? `<div class="vip-perk-note">Keyingi daraja: <b>${next.name}</b>${next.dailyBonusPct ? ` — kunlik bonus +${next.dailyBonusPct}%` : ''}</div>` : ''}
+      `;
+    }
+
+    function renderReferralCard() {
+      const code = skzGetReferralCode();
+      const redeemed = skzReferralRedeemedInfo();
+      document.getElementById('refCard').innerHTML = `
+        <div style="font-size:12.5px; color:var(--text-muted);">Do'stingizga shu kodni yuboring — u faollashtirsa, sizga emas, faollashtiruvchiga bonus beriladi (demo rejim).</div>
+        <div class="ref-code-row">
+          <div class="ref-code-box" id="refCodeBox">${code}</div>
+          <button class="ref-copy-btn" id="refCopyBtn">📋 Nusxalash</button>
+        </div>
+        <div style="font-size:12.5px; color:var(--text-muted); margin-bottom:8px;">Do'stingizning kodi bormi? Kiriting:</div>
+        <div class="ref-redeem-row">
+          <input type="text" id="refInput" placeholder="COF-XXXXXX" maxlength="12" ${redeemed ? 'disabled' : ''}>
+          <button id="refRedeemBtn" ${redeemed ? 'disabled' : ''}>Faollashtirish</button>
+        </div>
+        <div class="ref-status ${redeemed ? 'done' : ''}">
+          ${redeemed ? `✅ "${redeemed.code}" kodi faollashtirilgan — +${skzFmt(redeemed.reward)} 💎 olindi.` : "Har bir brauzerda faqat bitta kodni faollashtirish mumkin."}
+        </div>
+      `;
+
+      document.getElementById('refCopyBtn').onclick = () => {
+        navigator.clipboard.writeText(code).then(() => {
+          showToast('📋 Kod nusxalandi!', 'win');
+        }).catch(() => {
+          showToast(code, 'win');
+        });
+      };
+
+      if (!redeemed) {
+        document.getElementById('refRedeemBtn').onclick = () => {
+          const val = document.getElementById('refInput').value;
+          const res = skzRedeemReferralCode(val);
+          if (res.ok) {
+            showToast(`🎉 Kod faollashtirildi! +${skzFmt(res.reward)} 💎`, 'win');
+            renderReferralCard();
+            renderProfileHeader();
+          } else {
+            const messages = {
+              'empty': "Kodni kiriting!",
+              'self': "O'zingizning kodingizni kirita olmaysiz!",
+              'invalid-format': "Kod formati noto'g'ri (masalan: COF-4F8A9C)",
+              'already-used': "Siz allaqachon bitta kodni faollashtirgansiz!"
+            };
+            showToast(messages[res.reason] || "Xatolik yuz berdi", 'lose');
+          }
+        };
+      }
+    }
+
+    function renderStats() {
+      const s = skzStatsGet();
+      const cards = [
+        { icon: '📦', value: skzFmt(s.casesOpened), label: "Ochilgan keyslar" },
+        { icon: '🎁', value: skzFmt(s.giftsWon), label: "Jami sovg'alar" },
+        { icon: '👑', value: skzFmt(s.legendaryCount), label: "Legendary drop" },
+        { icon: '💎', value: s.bestDropName ? `${skzFmt(s.bestDropValue)}` : '—', label: s.bestDropName ? `Eng qimmat: ${s.bestDropName}` : "Eng qimmat drop" },
+        { icon: '🏆', value: skzFmt(s.peakBalance), label: "Rekord balans" },
+        { icon: '🔥', value: `${skzFmt(s.totalWins)} / ${skzFmt(s.totalLosses)}`, label: "Yutuq / Yo'qotish" },
+      ];
+      document.getElementById('statsGrid').innerHTML = cards.map(c => `
+        <div class="stat-card">
+          <div class="stat-card-icon">${c.icon}</div>
+          <div class="stat-card-value">${c.value}</div>
+          <div class="stat-card-label">${c.label}</div>
+        </div>
+      `).join('');
+    }
+
+    function renderAchievements() {
+      const lang = skzGetLang();
+      const unlocked = skzGetUnlockedAchievements();
+      document.getElementById('achvSectionTitle').innerText =
+        `🎖️ Yutuqlar (${unlocked.length}/${SKZ_ACHIEVEMENTS.length})`;
+      document.getElementById('achvGrid').innerHTML = SKZ_ACHIEVEMENTS.map(a => {
+        const isUnlocked = unlocked.includes(a.id);
+        const title = a.title[lang] || a.title.uz;
+        const desc = a.desc[lang] || a.desc.uz;
+        return `
+          <div class="achv-card ${isUnlocked ? 'unlocked' : ''}">
+            <div class="achv-card-icon">${isUnlocked ? a.icon : '🔒'}</div>
+            <div class="achv-card-title">${title}</div>
+            <div class="achv-card-desc">${desc}</div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    window.onload = () => {
+      renderProfileHeader();
+      renderVipCard();
+      renderReferralCard();
+      renderStats();
+      renderAchievements();
+      skzCheckAchievements();
+    };
+  </script>
+</body>
+</html>
