@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>COFEATURE - Keyslar</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <link rel="stylesheet" href="styles.css">
 <script src="balance.js" defer></script>
 <script src="vip.js" defer></script>
@@ -18,16 +19,16 @@
 
   <div class="topbar">
     <div class="topbar-left">
-      <a class="back-btn" href="index.html">⬅ Lobbi</a>
-      <div class="brand">🎁 KEYSLAR</div>
+      <a class="back-btn" href="index.html"><i class="fa-solid fa-arrow-left"></i> Lobbi</a>
+      <div class="brand"><i class="fa-solid fa-gift" style="color: #f59e0b;"></i> KEYSLAR</div>
     </div>
-    <div class="balance-pill">💎 <span class="js-balance">0</span></div>
+    <div class="balance-pill"><i class="fa-solid fa-gem" style="color: #38bdf8;"></i> <span class="js-balance">0</span></div>
   </div>
 
   <div class="game-page-wrap">
     <div class="app-container">
 
-      <div class="game-heading">🎁 SOVG'A KEYSLARI</div>
+      <div class="game-heading"><i class="fa-solid fa-gift" style="color: #f59e0b;"></i> SOVG'A KEYSLARI</div>
       <div class="game-subtitle">Keyni tanlang va oching — ichidan tasodifiy darajadagi sovg'a (gift) chiqadi va inventaringizga tushadi. Uni istalgan vaqtda sotishingiz yoki Apgreyderda tavakkal qilishingiz mumkin.</div>
 
       <div class="cases-grid" id="casesGrid"></div>
@@ -44,8 +45,8 @@
         <div style="font-size:12px; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px;" id="winRarity"></div>
         <div style="font-weight:900; font-size:18px; color:var(--accent-amber);" id="winValue"></div>
         <div style="display:flex; gap:8px; width:100%; margin-top:6px;">
-          <a href="inventory.html" class="primary-btn" style="background:rgba(255,255,255,0.08); color:#fff; flex:1; text-align:center; text-decoration:none;">🎒 Inventarga</a>
-          <button class="primary-btn blue" style="flex:1;" id="sellNowBtn" onclick="sellLastWin()">💰 Darhol sotish</button>
+          <a href="inventory.html" class="primary-btn" style="background:rgba(255,255,255,0.08); color:#fff; flex:1; text-align:center; text-decoration:none;"><i class="fa-solid fa-briefcase"></i> Inventarga</a>
+          <button class="primary-btn blue" style="flex:1;" id="sellNowBtn" onclick="sellLastWin()"><i class="fa-solid fa-coins"></i> Darhol sotish</button>
         </div>
       </div>
 
@@ -63,12 +64,6 @@
   <div class="toast" id="toast"></div>
 
   <script>
-    // Eslatma: SKZ_GIFTS ro'yxati gifts.js faylida e'lon qilingan (defer bilan
-    // yuklanadi). Uni bu yerda darhol o'qimaymiz — faqat funksiyalar ichida
-    // (masalan, skzWeightedGiftPick() orqali) ishlatamiz, aks holda sahifa
-    // hali to'liq yuklanmasdan xatolik chiqib, KEYNI OCHISH tugmasi ishlamay
-    // qoladi.
-
     const SKZ_FREE24_KEY = 'skinoz_free24_last_v1';
     const SKZ_FREE24_CODE = 'tekin24';
     const SKZ_FREE24_COOLDOWN = 24 * 60 * 60 * 1000;
@@ -88,7 +83,7 @@
 
     function showToast(msg, type) {
       const t = document.getElementById('toast');
-      t.innerText = msg;
+      t.innerHTML = msg; // Ikonkalar ishlashi uchun innerHTML ga o'zgartirildi
       t.className = 'toast show ' + (type || '');
       if (window.skzOnToast) window.skzOnToast(type);
       setTimeout(() => t.classList.remove('show'), 2000);
@@ -101,7 +96,7 @@
           ${c.free ? '<div class="badge badge-free" style="position:absolute; top:8px; right:8px;">24H</div>' : ''}
           <div class="case-box ${c.class}"><img src="${c.img || skzGiftSrc('Case.webp')}" alt="${c.name}" style="width:56px; height:56px; object-fit:contain;"></div>
           <div class="case-name">${c.name}</div>
-          <div class="case-price">${c.free ? '🎁 BEPUL' : '💎 ' + skzFmt(c.price)}</div>
+          <div class="case-price">${c.free ? '<i class="fa-solid fa-gift"></i> BEPUL' : '<i class="fa-solid fa-gem" style="color:#38bdf8;"></i> ' + skzFmt(c.price)}</div>
         </div>
       `).join('');
     }
@@ -148,12 +143,12 @@
         const remaining = free24RemainingMs();
         if (remaining <= 0) {
           timer.className = 'free24-timer ready';
-          timer.innerText = "✅ Bepul key tayyor! Promo kodni kiriting va oching.";
+          timer.innerHTML = '<i class="fa-solid fa-check"></i> Bepul key tayyor! Promo kodni kiriting va oching.';
           openBtn.disabled = opening;
           if (free24IntervalId) { clearInterval(free24IntervalId); free24IntervalId = null; }
         } else {
           timer.className = 'free24-timer';
-          timer.innerText = `⏳ Keyingi bepul key: ${skzFmtTime(remaining)}`;
+          timer.innerHTML = `<i class="fa-solid fa-hourglass-half"></i> Keyingi bepul key: ${skzFmtTime(remaining)}`;
           openBtn.disabled = true;
         }
       };
@@ -174,7 +169,7 @@
       const stripLen = 34;
       const items = [];
       for (let i = 0; i < stripLen - 1; i++) items.push(weightedPick());
-      const landingIndex = stripLen - 4; // land a few items before the end for a nice run-up
+      const landingIndex = stripLen - 4; 
       items.splice(landingIndex, 0, finalGift);
 
       items.forEach(g => {
@@ -184,7 +179,7 @@
         card.innerHTML = `
           <div class="gift-icon-wrap rarity-${g.rarity}">${skzGiftImg(g.file, g.name)}</div>
           <div class="gift-name">${g.name}</div>
-          <div class="gift-value">💎 ${skzFmt(val)}</div>
+          <div class="gift-value"><i class="fa-solid fa-gem" style="color:#38bdf8;"></i> ${skzFmt(val)}</div>
         `;
         track.appendChild(card);
       });
@@ -198,17 +193,17 @@
 
       if (selectedCase.free) {
         if (free24RemainingMs() > 0) {
-          showToast("⏳ Bepul key hali tayyor emas!", 'lose');
+          showToast("<i class='fa-solid fa-hourglass-half'></i> Bepul key hali tayyor emas!", 'lose');
           return;
         }
         const codeInput = document.getElementById('free24CodeInput');
         const code = (codeInput.value || '').trim().toLowerCase();
         if (code !== SKZ_FREE24_CODE) {
-          showToast("❌ Noto'g'ri promo kod!", 'lose');
+          showToast("<i class='fa-solid fa-circle-xmark'></i> Noto'g'ri promo kod!", 'lose');
           return;
         }
       } else if (skzGetBalance() < price) {
-        showToast("Balansingizda mablag' yetarli emas!", 'lose');
+        showToast("<i class='fa-solid fa-circle-exclamation'></i> Balansingizda mablag' yetarli emas!", 'lose');
         return;
       }
 
@@ -223,7 +218,7 @@
       reelWrap.style.display = 'block';
       const landingIndex = buildReelStrip(finalGift);
 
-      const cardWidth = 96 + 12; // gift-card width + gap
+      const cardWidth = 96 + 12; 
       const wrapWidth = reelWrap.clientWidth;
       const targetOffset = landingIndex * cardWidth + cardWidth / 2 - wrapWidth / 2;
 
@@ -253,15 +248,15 @@
         document.getElementById('winIconWrap').innerHTML = skzGiftImg(finalGift.file, finalGift.name, 'gift-drop-anim');
         const shadowEl = document.getElementById('winShadow');
         shadowEl.style.animation = 'none';
-        void shadowEl.offsetWidth; // reflow so the animation replays every open
+        void shadowEl.offsetWidth; 
         shadowEl.style.animation = '';
         document.getElementById('winName').innerText = finalGift.name;
         document.getElementById('winRarity').innerText = SKZ_RARITY_LABEL[finalGift.rarity];
-        document.getElementById('winValue').innerText = `${skzFmt(winAmount)} 💎`;
+        document.getElementById('winValue').innerHTML = `${skzFmt(winAmount)} <i class="fa-solid fa-gem" style="color:#38bdf8;"></i>`;
         document.getElementById('winReveal').classList.add('show');
 
         const isProfit = selectedCase.free ? true : winAmount >= price;
-        showToast(isProfit ? `🎉 ${finalGift.name} inventarga qo'shildi!` : `${finalGift.name} inventarga qo'shildi`, isProfit ? 'win' : 'lose');
+        showToast(isProfit ? `<i class="fa-solid fa-gift"></i> ${finalGift.name} inventarga qo'shildi!` : `${finalGift.name} inventarga qo'shildi`, isProfit ? 'win' : 'lose');
 
         const hist = document.getElementById('history');
         const div = document.createElement('div');
@@ -280,7 +275,7 @@
       if (!lastWonItemId) return;
       const amount = skzSellItem(lastWonItemId);
       if (amount > 0) {
-        showToast(`💰 Sotildi! +${skzFmt(amount)} 💎`, 'win');
+        showToast(`<i class="fa-solid fa-coins"></i> Sotildi! +${skzFmt(amount)} <i class="fa-solid fa-gem" style="color:#38bdf8;"></i>`, 'win');
         document.getElementById('winReveal').classList.remove('show');
         lastWonItemId = null;
       }

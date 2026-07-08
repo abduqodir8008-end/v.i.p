@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>COFEATURE - Crash</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <link rel="stylesheet" href="styles.css">
 <script src="balance.js" defer></script>
 <script src="vip.js" defer></script>
@@ -66,10 +67,10 @@
 
   <div class="topbar">
     <div class="topbar-left">
-      <a class="back-btn" href="index.html">⬅ Lobbi</a>
-      <div class="brand">📈 CRASH</div>
+      <a class="back-btn" href="index.html"><i class="fa-solid fa-arrow-left"></i> Lobbi</a>
+      <div class="brand"><i class="fa-solid fa-chart-line" style="color: #f59e0b;"></i> CRASH</div>
     </div>
-    <div class="balance-pill">💎 <span class="js-balance">0</span></div>
+    <div class="balance-pill"><i class="fa-solid fa-gem" style="color: #38bdf8;"></i> <span class="js-balance">0</span></div>
   </div>
 
   <div class="game-page-wrap">
@@ -86,7 +87,7 @@
 
       <div class="cashout-info">
         <span>Tikilgan:</span>
-        <span id="activeBetLabel">— 💎</span>
+        <span id="activeBetLabel">— <i class="fa-solid fa-gem" style="color: #38bdf8;"></i></span>
       </div>
 
       <div id="stakeMode"></div>
@@ -120,7 +121,7 @@
     const actionBtn = document.getElementById('actionBtn');
     const activeBetLabel = document.getElementById('activeBetLabel');
 
-    let phase = 'waiting'; // waiting | flying | crashed
+    let phase = 'waiting'; 
     let multiplier = 1.00;
     let crashPoint = 2.0;
     let startTime = null;
@@ -132,7 +133,7 @@
 
     function showToast(msg, type) {
       const t = document.getElementById('toast');
-      t.innerText = msg;
+      t.innerHTML = msg; // Ikonkalar ishlashi uchun
       t.className = 'toast show ' + (type || '');
       if (window.skzOnToast) window.skzOnToast(type);
       setTimeout(() => t.classList.remove('show'), 1800);
@@ -149,10 +150,8 @@
       betAmount = parseInt(e.target.value) || 0;
     });
 
-    // Provably-fair uslubdagi crash nuqtasi generatori (soddalashtirilgan)
     function generateCrashPoint() {
       const r = Math.random();
-      // ~3% instant crash, uzun quyruqli taqsimot
       if (r < 0.03) return 1.00;
       const houseEdge = 0.97;
       const point = houseEdge / (1 - r);
@@ -184,17 +183,17 @@
     function onActionClick() {
       if (phase === 'waiting') {
         if (!skzGiftBetCanPlace(betAmount)) {
-          showToast(skzStake.mode === 'gift' ? "Avval sovg'a tanlang!" : "Balansingizda mablag' yetarli emas!", 'lose');
+          showToast(skzStake.mode === 'gift' ? "<i class='fa-solid fa-circle-exclamation'></i> Avval sovg'a tanlang!" : "<i class='fa-solid fa-circle-exclamation'></i> Balansingizda mablag' yetarli emas!", 'lose');
           return;
         }
         currentStakeInfo = skzGiftBetConsume(betAmount);
         hasCashedOut = false;
         activeBetLabel.innerHTML = currentStakeInfo.mode === 'gift'
-          ? `🎁 ${currentStakeInfo.stakedItem.name}`
-          : `${skzFmt(currentStakeInfo.value)} 💎`;
+          ? `<i class="fa-solid fa-gift"></i> ${currentStakeInfo.stakedItem.name}`
+          : `${skzFmt(currentStakeInfo.value)} <i class="fa-solid fa-gem" style="color: #38bdf8;"></i>`;
         document.getElementById('cashControls').style.display = 'none';
         actionBtn.disabled = true;
-        actionBtn.innerText = "KUTILMOQDA...";
+        actionBtn.innerHTML = "KUTILMOQDA...";
       } else if (phase === 'flying' && currentStakeInfo && !hasCashedOut) {
         cashOut();
       }
@@ -204,33 +203,33 @@
       hasCashedOut = true;
       const outcome = skzGiftBetResolveWin(currentStakeInfo, multiplier);
       if (outcome.type === 'gift') {
-        showToast(`💰 Naqd oldingiz! ${outcome.from.name} → ${outcome.gift.name} 🎁 (${multiplier.toFixed(2)}x)`, 'win');
+        showToast(`<i class="fa-solid fa-coins" style="color: #f59e0b;"></i> Naqd oldingiz! ${outcome.from.name} <i class="fa-solid fa-arrow-right"></i> ${outcome.gift.name} <i class="fa-solid fa-gift"></i> (${multiplier.toFixed(2)}x)`, 'win');
       } else {
-        showToast(`💰 Naqd oldingiz! +${skzFmt(outcome.amount)} 💎 (${multiplier.toFixed(2)}x)`, 'win');
+        showToast(`<i class="fa-solid fa-coins" style="color: #f59e0b;"></i> Naqd oldingiz! +${skzFmt(outcome.amount)} <i class="fa-solid fa-gem" style="color: #38bdf8;"></i> (${multiplier.toFixed(2)}x)`, 'win');
       }
       actionBtn.disabled = true;
-      actionBtn.innerText = "NAQD OLINDI ✔";
+      actionBtn.innerHTML = "NAQD OLINDI <i class='fa-solid fa-check'></i>";
     }
 
     function startWaitPhase() {
       phase = 'waiting';
       currentStakeInfo = null;
       hasCashedOut = false;
-      activeBetLabel.innerText = '— 💎';
+      activeBetLabel.innerHTML = '— <i class="fa-solid fa-gem" style="color: #38bdf8;"></i>';
       multiplier = 1.00;
-      multLabel.innerText = '1.00x';
+      multLabel.innerHTML = '1.00x';
       multLabel.className = 'crash-mult-label';
       resetChart();
       actionBtn.disabled = false;
-      actionBtn.innerText = 'TIKISH';
+      actionBtn.innerHTML = 'TIKISH';
       actionBtn.className = 'primary-btn';
       if (skzStake.mode !== 'gift') document.getElementById('cashControls').style.display = 'block';
 
       let countdown = 5;
-      statusLine.innerText = `Keyingi tur ${countdown}s dan keyin...`;
+      statusLine.innerHTML = `Keyingi tur <i class="fa-regular fa-clock"></i> ${countdown}s dan keyin...`;
       countdownId = setInterval(() => {
         countdown -= 1;
-        statusLine.innerText = `Keyingi tur ${countdown}s dan keyin...`;
+        statusLine.innerHTML = `Keyingi tur <i class="fa-regular fa-clock"></i> ${countdown}s dan keyin...`;
         if (countdown <= 0) {
           clearInterval(countdownId);
           startFlyPhase();
@@ -242,11 +241,11 @@
       phase = 'flying';
       crashPoint = generateCrashPoint();
       startTime = performance.now();
-      statusLine.innerText = 'Uchmoqda...';
+      statusLine.innerHTML = '<i class="fa-solid fa-rocket" style="color: #38bdf8;"></i> Uchmoqda...';
       multLabel.className = 'crash-mult-label flying';
       if (currentStakeInfo) {
         actionBtn.disabled = false;
-        actionBtn.innerText = 'NAQD OLISH 💰';
+        actionBtn.innerHTML = 'NAQD OLISH <i class="fa-solid fa-coins"></i>';
         actionBtn.className = 'primary-btn blue';
       }
       tick();
@@ -262,7 +261,7 @@
         return;
       }
 
-      multLabel.innerText = multiplier.toFixed(2) + 'x';
+      multLabel.innerHTML = multiplier.toFixed(2) + 'x';
       drawChart(Math.min(elapsed / 6, 1));
       rafId = requestAnimationFrame(tick);
     }
@@ -270,10 +269,10 @@
     function endRound() {
       cancelAnimationFrame(rafId);
       phase = 'crashed';
-      multLabel.innerText = multiplier.toFixed(2) + 'x';
+      multLabel.innerHTML = multiplier.toFixed(2) + 'x';
       multLabel.className = 'crash-mult-label crashed';
       drawChart(1);
-      statusLine.innerText = `💥 Portladi ${multiplier.toFixed(2)}x da!`;
+      statusLine.innerHTML = `<i class="fa-solid fa-burst" style="color: #ef4444;"></i> Portladi ${multiplier.toFixed(2)}x da!`;
 
       const hist = document.getElementById('history');
       const div = document.createElement('div');
@@ -285,7 +284,7 @@
 
       if (currentStakeInfo && !hasCashedOut) {
         const outcome = skzGiftBetResolveLose(currentStakeInfo);
-        showToast(outcome.type === 'gift-lost' ? `💥 ${outcome.from.name} kuydi!` : `💥 Yutqazdingiz! -${skzFmt(outcome.amount)} 💎`, 'lose');
+        showToast(outcome.type === 'gift-lost' ? `<i class="fa-solid fa-burst"></i> ${outcome.from.name} kuydi!` : `<i class="fa-solid fa-xmark"></i> Yutqazdingiz! -${skzFmt(outcome.amount)} <i class="fa-solid fa-gem" style="color: #38bdf8;"></i>`, 'lose');
       }
 
       actionBtn.disabled = true;

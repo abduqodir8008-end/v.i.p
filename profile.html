@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>COFEATURE - Profil</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <link rel="stylesheet" href="styles.css">
 <script src="balance.js" defer></script>
 <script src="vip.js" defer></script>
@@ -29,10 +30,10 @@
 
   <div class="topbar">
     <div class="topbar-left">
-      <a class="back-btn" href="index.html">⬅ Lobbi</a>
-      <div class="brand">📊 PROFIL</div>
+      <a class="back-btn" href="index.html"><i class="fa-solid fa-arrow-left"></i> Lobbi</a>
+      <div class="brand"><i class="fa-solid fa-chart-simple" style="color: #a855f7;"></i> PROFIL</div>
     </div>
-    <div class="balance-pill">💎 <span class="js-balance">0</span></div>
+    <div class="balance-pill"><i class="fa-solid fa-gem" style="color: #38bdf8;"></i> <span class="js-balance">0</span></div>
   </div>
 
   <div class="game-page-wrap">
@@ -40,16 +41,16 @@
 
       <div class="profile-header" id="profileHeader"></div>
 
-      <div class="profile-section-title">🎖️ VIP Daraja</div>
+      <div class="profile-section-title"><i class="fa-solid fa-medal" style="color: #f59e0b;"></i> VIP Daraja</div>
       <div class="vip-card" id="vipCard"></div>
 
-      <div class="profile-section-title">🤝 Do'stlarni taklif qilish</div>
+      <div class="profile-section-title"><i class="fa-solid fa-handshake" style="color: #10b981;"></i> Do'stlarni taklif qilish</div>
       <div class="ref-card" id="refCard"></div>
 
-      <div class="profile-section-title">📊 Statistika</div>
+      <div class="profile-section-title"><i class="fa-solid fa-chart-column" style="color: #3b82f6;"></i> Statistika</div>
       <div class="stats-grid" id="statsGrid"></div>
 
-      <div class="profile-section-title" id="achvSectionTitle">🎖️ Yutuqlar</div>
+      <div class="profile-section-title" id="achvSectionTitle"><i class="fa-solid fa-trophy" style="color: #eab308;"></i> Yutuqlar</div>
       <div class="achv-grid" id="achvGrid"></div>
 
     </div>
@@ -60,7 +61,7 @@
   <script>
     function showToast(msg, type) {
       const t = document.getElementById('toast');
-      t.innerText = msg;
+      t.innerHTML = msg; // Ikonkalar HTML sifatida o'qilishi uchun innerHTML ishlatildi
       t.className = 'toast show ' + (type || '');
       if (window.skzOnToast) window.skzOnToast(type);
       setTimeout(() => t.classList.remove('show'), 2000);
@@ -74,7 +75,7 @@
         <div class="profile-header-avatar">${user && user.avatar ? `<img src="${user.avatar}" alt="avatar">` : initials}</div>
         <div>
           <div class="profile-header-name">${fullName}</div>
-          <div class="profile-header-sub">💎 ${skzFmt(skzGetBalance())} balans</div>
+          <div class="profile-header-sub"><i class="fa-solid fa-gem" style="color: #38bdf8;"></i> ${skzFmt(skzGetBalance())} balans</div>
         </div>
       `;
     }
@@ -83,11 +84,11 @@
       const { tier, next, pct, into, span } = skzVipProgress();
       document.getElementById('vipCard').innerHTML = `
         <div class="vip-card-top">
-          <div class="vip-card-title">🏅 ${tier.name} (Lv.${tier.level})</div>
+          <div class="vip-card-title"><i class="fa-solid fa-medal" style="color: #f59e0b;"></i> ${tier.name} (Lv.${tier.level})</div>
           <div style="font-size:12px; color:var(--text-muted);">${next ? skzFmt(into) + ' / ' + skzFmt(span) + ' XP' : 'Maksimal daraja!'}</div>
         </div>
         <div class="vip-bar-track"><div class="vip-bar-fill" style="width:${pct}%;"></div></div>
-        ${tier.dailyBonusPct ? `<div class="vip-perk-note">✨ Joriy imtiyoz: kunlik bonusga +${tier.dailyBonusPct}%</div>` : `<div class="vip-perk-note">Keyingi darajalarda kunlik bonusga foizli qo'shimchalar ochiladi.</div>`}
+        ${tier.dailyBonusPct ? `<div class="vip-perk-note"><i class="fa-solid fa-wand-magic-sparkles" style="color: #fbbf24;"></i> Joriy imtiyoz: kunlik bonusga +${tier.dailyBonusPct}%</div>` : `<div class="vip-perk-note">Keyingi darajalarda kunlik bonusga foizli qo'shimchalar ochiladi.</div>`}
         ${next ? `<div class="vip-perk-note">Keyingi daraja: <b>${next.name}</b>${next.dailyBonusPct ? ` — kunlik bonus +${next.dailyBonusPct}%` : ''}</div>` : ''}
       `;
     }
@@ -99,7 +100,7 @@
         <div style="font-size:12.5px; color:var(--text-muted);">Do'stingizga shu kodni yuboring — u faollashtirsa, sizga emas, faollashtiruvchiga bonus beriladi (demo rejim).</div>
         <div class="ref-code-row">
           <div class="ref-code-box" id="refCodeBox">${code}</div>
-          <button class="ref-copy-btn" id="refCopyBtn">📋 Nusxalash</button>
+          <button class="ref-copy-btn" id="refCopyBtn"><i class="fa-solid fa-clipboard"></i> Nusxalash</button>
         </div>
         <div style="font-size:12.5px; color:var(--text-muted); margin-bottom:8px;">Do'stingizning kodi bormi? Kiriting:</div>
         <div class="ref-redeem-row">
@@ -107,13 +108,13 @@
           <button id="refRedeemBtn" ${redeemed ? 'disabled' : ''}>Faollashtirish</button>
         </div>
         <div class="ref-status ${redeemed ? 'done' : ''}">
-          ${redeemed ? `✅ "${redeemed.code}" kodi faollashtirilgan — +${skzFmt(redeemed.reward)} 💎 olindi.` : "Har bir brauzerda faqat bitta kodni faollashtirish mumkin."}
+          ${redeemed ? `<i class="fa-solid fa-circle-check" style="color: #10b981;"></i> "${redeemed.code}" kodi faollashtirilgan — +${skzFmt(redeemed.reward)} <i class="fa-solid fa-gem" style="color: #38bdf8;"></i> olindi.` : "Har bir brauzerda faqat bitta kodni faollashtirish mumkin."}
         </div>
       `;
 
       document.getElementById('refCopyBtn').onclick = () => {
         navigator.clipboard.writeText(code).then(() => {
-          showToast('📋 Kod nusxalandi!', 'win');
+          showToast('<i class="fa-solid fa-clipboard-check"></i> Kod nusxalandi!', 'win');
         }).catch(() => {
           showToast(code, 'win');
         });
@@ -124,17 +125,17 @@
           const val = document.getElementById('refInput').value;
           const res = skzRedeemReferralCode(val);
           if (res.ok) {
-            showToast(`🎉 Kod faollashtirildi! +${skzFmt(res.reward)} 💎`, 'win');
+            showToast(`<i class="fa-solid fa-party-horn"></i> Kod faollashtirildi! +${skzFmt(res.reward)} <i class="fa-solid fa-gem" style="color: #38bdf8;"></i>`, 'win');
             renderReferralCard();
             renderProfileHeader();
           } else {
             const messages = {
-              'empty': "Kodni kiriting!",
-              'self': "O'zingizning kodingizni kirita olmaysiz!",
-              'invalid-format': "Kod formati noto'g'ri (masalan: COF-4F8A9C)",
-              'already-used': "Siz allaqachon bitta kodni faollashtirgansiz!"
+              'empty': "<i class='fa-solid fa-circle-exclamation'></i> Kodni kiriting!",
+              'self': "<i class='fa-solid fa-circle-xmark'></i> O'zingizning kodingizni kirita olmaysiz!",
+              'invalid-format': "<i class='fa-solid fa-circle-xmark'></i> Kod formati noto'g'ri (masalan: COF-4F8A9C)",
+              'already-used': "<i class='fa-solid fa-circle-exclamation'></i> Siz allaqachon bitta kodni faollashtirgansiz!"
             };
-            showToast(messages[res.reason] || "Xatolik yuz berdi", 'lose');
+            showToast(messages[res.reason] || "<i class='fa-solid fa-circle-xmark'></i> Xatolik yuz berdi", 'lose');
           }
         };
       }
@@ -143,12 +144,12 @@
     function renderStats() {
       const s = skzStatsGet();
       const cards = [
-        { icon: '📦', value: skzFmt(s.casesOpened), label: "Ochilgan keyslar" },
-        { icon: '🎁', value: skzFmt(s.giftsWon), label: "Jami sovg'alar" },
-        { icon: '👑', value: skzFmt(s.legendaryCount), label: "Legendary drop" },
-        { icon: '💎', value: s.bestDropName ? `${skzFmt(s.bestDropValue)}` : '—', label: s.bestDropName ? `Eng qimmat: ${s.bestDropName}` : "Eng qimmat drop" },
-        { icon: '🏆', value: skzFmt(s.peakBalance), label: "Rekord balans" },
-        { icon: '🔥', value: `${skzFmt(s.totalWins)} / ${skzFmt(s.totalLosses)}`, label: "Yutuq / Yo'qotish" },
+        { icon: '<i class="fa-solid fa-box-open" style="color: #a855f7;"></i>', value: skzFmt(s.casesOpened), label: "Ochilgan keyslar" },
+        { icon: '<i class="fa-solid fa-gift" style="color: #f59e0b;"></i>', value: skzFmt(s.giftsWon), label: "Jami sovg'alar" },
+        { icon: '<i class="fa-solid fa-crown" style="color: #fbbf24;"></i>', value: skzFmt(s.legendaryCount), label: "Legendary drop" },
+        { icon: '<i class="fa-solid fa-gem" style="color: #38bdf8;"></i>', value: s.bestDropName ? `${skzFmt(s.bestDropValue)}` : '—', label: s.bestDropName ? `Eng qimmat: ${s.bestDropName}` : "Eng qimmat drop" },
+        { icon: '<i class="fa-solid fa-trophy" style="color: #eab308;"></i>', value: skzFmt(s.peakBalance), label: "Rekord balans" },
+        { icon: '<i class="fa-solid fa-fire" style="color: #ef4444;"></i>', value: `${skzFmt(s.totalWins)} / ${skzFmt(s.totalLosses)}`, label: "Yutuq / Yo'qotish" },
       ];
       document.getElementById('statsGrid').innerHTML = cards.map(c => `
         <div class="stat-card">
@@ -162,15 +163,18 @@
     function renderAchievements() {
       const lang = skzGetLang();
       const unlocked = skzGetUnlockedAchievements();
-      document.getElementById('achvSectionTitle').innerText =
-        `🎖️ Yutuqlar (${unlocked.length}/${SKZ_ACHIEVEMENTS.length})`;
+      document.getElementById('achvSectionTitle').innerHTML =
+        `<i class="fa-solid fa-trophy" style="color: #eab308;"></i> Yutuqlar (${unlocked.length}/${SKZ_ACHIEVEMENTS.length})`;
+      
       document.getElementById('achvGrid').innerHTML = SKZ_ACHIEVEMENTS.map(a => {
         const isUnlocked = unlocked.includes(a.id);
         const title = a.title[lang] || a.title.uz;
         const desc = a.desc[lang] || a.desc.uz;
+        const iconHtml = isUnlocked ? a.icon : '<i class="fa-solid fa-lock" style="color: #64748b;"></i>';
+        
         return `
           <div class="achv-card ${isUnlocked ? 'unlocked' : ''}">
-            <div class="achv-card-icon">${isUnlocked ? a.icon : '🔒'}</div>
+            <div class="achv-card-icon">${iconHtml}</div>
             <div class="achv-card-title">${title}</div>
             <div class="achv-card-desc">${desc}</div>
           </div>

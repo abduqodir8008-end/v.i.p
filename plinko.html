@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>COFEATURE - Plinko</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <link rel="stylesheet" href="styles.css">
 <script src="balance.js" defer></script>
 <script src="vip.js" defer></script>
@@ -43,10 +44,10 @@
 
   <div class="topbar">
     <div class="topbar-left">
-      <a class="back-btn" href="index.html">⬅ Lobbi</a>
-      <div class="brand">🟣 PLINKO</div>
+      <a class="back-btn" href="index.html"><i class="fa-solid fa-arrow-left"></i> Lobbi</a>
+      <div class="brand"><i class="fa-solid fa-circle-down" style="color: #a855f7;"></i> PLINKO</div>
     </div>
-    <div class="balance-pill">💎 <span class="js-balance">0</span></div>
+    <div class="balance-pill"><i class="fa-solid fa-gem" style="color: #38bdf8;"></i> <span class="js-balance">0</span></div>
   </div>
 
   <div class="game-page-wrap">
@@ -104,7 +105,7 @@
 
     function showToast(msg, type) {
       const t = document.getElementById('toast');
-      t.innerText = msg;
+      t.innerHTML = msg; // innerHTML ga o'zgartirildi
       t.className = 'toast show ' + (type || '');
       if (window.skzOnToast) window.skzOnToast(type);
       setTimeout(() => t.classList.remove('show'), 2000);
@@ -189,7 +190,7 @@
     function dropBall() {
       if (animating) return;
       if (!skzGiftBetCanPlace(betAmount)) {
-        showToast(skzStake.mode === 'gift' ? "Avval sovg'a tanlang!" : "Balansingizda mablag' yetarli emas!", 'lose');
+        showToast(skzStake.mode === 'gift' ? "<i class='fa-solid fa-circle-exclamation'></i> Avval sovg'a tanlang!" : "<i class='fa-solid fa-circle-exclamation'></i> Balansingizda mablag' yetarli emas!", 'lose');
         return;
       }
       const stakeInfo = skzGiftBetConsume(betAmount);
@@ -198,8 +199,7 @@
 
       // Simulate path: random left/right decision at each row
       const mults = MULTS[risk];
-      let position = 0; // net right moves - left moves, ranges -ROWS..+ROWS
-
+      let position = 0; 
       const decisions = [];
       for (let i = 0; i < ROWS; i++) {
         const goRight = Math.random() < 0.5;
@@ -235,12 +235,14 @@
       function finish() {
         const finalMult = mults[slotIndex];
         const outcome = skzGiftBetResolveWin(stakeInfo, finalMult);
-        const msgPrefix = finalMult >= 1 ? '🎉' : '😬';
+        const msgPrefix = finalMult >= 1 ? '<i class="fa-solid fa-check"></i>' : '<i class="fa-solid fa-xmark"></i>';
+        
         if (outcome.type === 'gift') {
-          showToast(`${msgPrefix} ${finalMult}x! ${outcome.from.name} → ${outcome.gift.name} 🎁`, finalMult >= 1 ? 'win' : 'lose');
+          showToast(`${msgPrefix} ${finalMult}x! ${outcome.from.name} <i class="fa-solid fa-arrow-right"></i> ${outcome.gift.name} <i class="fa-solid fa-gift"></i>`, finalMult >= 1 ? 'win' : 'lose');
         } else {
-          showToast(`${msgPrefix} ${finalMult}x! +${skzFmt(outcome.amount)} 💎`, finalMult >= 1 ? 'win' : 'lose');
+          showToast(`${msgPrefix} ${finalMult}x! +${skzFmt(outcome.amount)} <i class="fa-solid fa-gem" style="color:#38bdf8;"></i>`, finalMult >= 1 ? 'win' : 'lose');
         }
+        
         animating = false;
         document.getElementById('dropBtn').disabled = false;
         setTimeout(() => drawBoard(), 1200);

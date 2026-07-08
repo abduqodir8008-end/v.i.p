@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>COFEATURE - Apgreyder</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <link rel="stylesheet" href="styles.css">
 <script src="balance.js" defer></script>
 <script src="vip.js" defer></script>
@@ -128,16 +129,16 @@
 
   <div class="topbar">
     <div class="topbar-left">
-      <a class="back-btn" href="index.html">⬅ Lobbi</a>
-      <div class="brand">⚡ APGREYDER</div>
+      <a class="back-btn" href="index.html"><i class="fa-solid fa-arrow-left"></i> Lobbi</a>
+      <div class="brand"><i class="fa-solid fa-bolt" style="color: #a855f7;"></i> APGREYDER</div>
     </div>
-    <div class="balance-pill">💎 <span class="js-balance">0</span></div>
+    <div class="balance-pill"><i class="fa-solid fa-gem" style="color: #38bdf8;"></i> <span class="js-balance">0</span></div>
   </div>
 
   <div class="game-page-wrap">
     <div class="app-container">
 
-      <div class="game-heading">⚡ SOVG'ANI APGREYD QILISH</div>
+      <div class="game-heading"><i class="fa-solid fa-bolt" style="color: #a855f7;"></i> SOVG'ANI APGREYD QILISH</div>
       <div class="game-subtitle">Inventardan bitta sovg'a tanlang, ko'paytmani belgilang va tavakkal qiling — yutsangiz sovg'angiz shuncha marta qimmatlashadi, yutqazsangiz — sovg'a kuyadi.</div>
 
       <div class="upg-picker-row" id="pickerRow"></div>
@@ -145,7 +146,7 @@
       <div class="upg-stage">
         <div class="upg-arrow-row">
           <div class="upg-slot" id="slotBefore"></div>
-          <div class="upg-arrow">➜</div>
+          <div class="upg-arrow"><i class="fa-solid fa-arrow-right"></i></div>
           <div class="upg-slot" id="slotAfter"></div>
         </div>
 
@@ -174,18 +175,17 @@
     let selectedMult = 2;
     let rolling = false;
     let wheelRotation = 0;
-    let currentTargetGift = null; // Apgreyd muvaffaqiyatli bo'lsa aylanadigan sovg'a
+    let currentTargetGift = null;
 
     function showToast(msg, type) {
       const t = document.getElementById('toast');
-      t.innerText = msg;
+      t.innerHTML = msg; // innerHTML ga almashtirildi
       t.className = 'toast show ' + (type || '');
       if (window.skzOnToast) window.skzOnToast(type);
       setTimeout(() => t.classList.remove('show'), 2000);
     }
 
     function chanceFor(mult) {
-      // Slight house edge baked in (0.95)
       return Math.min(95, Math.max(2, (0.95 / mult) * 100));
     }
 
@@ -202,7 +202,7 @@
         row.innerHTML = items.map(item => `
           <div class="upg-pick-item ${item.id === selectedItemId ? 'active' : ''}" onclick="pickItem('${item.id}')">
             <div class="gift-icon-wrap rarity-${item.rarity}">${skzGiftImg(item.file, item.name)}</div>
-            <div class="val">💎${skzFmt(item.value)}</div>
+            <div class="val"><i class="fa-solid fa-gem" style="color:#38bdf8;"></i> ${skzFmt(item.value)}</div>
           </div>
         `).join('');
       }
@@ -260,8 +260,7 @@
       const deg = chance * 3.6;
       const wheelEl = document.getElementById('upgWheel');
       const wheelInnerEl = document.querySelector('.upg-wheel-inner');
-      // Oldingi aylanishdan qolgan burchakni tozalash — aks holda pointer
-      // bilan rang chegarasi mos kelmay qoladi (vizual xato)
+      
       wheelEl.style.transition = 'none';
       wheelEl.style.transform = 'rotate(0deg)';
       if (wheelInnerEl) {
@@ -269,15 +268,14 @@
         wheelInnerEl.style.transform = 'rotate(0deg)';
       }
       wheelRotation = 0;
-      // eslatma: transition keyingi spin boshlanguncha "none" holida qoladi,
-      // spin funksiyasi o'zi qayta yoqadi (pastga qarang)
+      
       requestAnimationFrame(() => {
         wheelEl.style.transition = '';
         if (wheelInnerEl) wheelInnerEl.style.transition = '';
       });
       wheelEl.style.background =
         `conic-gradient(var(--accent) 0deg ${deg}deg, var(--accent-red) ${deg}deg 360deg)`;
-      document.getElementById('chanceLabel').innerText = chance.toFixed(1) + '%';
+      document.getElementById('chanceLabel').innerHTML = chance.toFixed(1) + '%';
     }
 
     function onUpgrade() {
@@ -294,7 +292,6 @@
       const deg = chance * 3.6;
       const won = Math.random() * 100 < chance;
 
-      // Land a few degrees inside the correct colored zone, never right on the boundary
       const pad = 4;
       const targetAngle = won
         ? pad + Math.random() * Math.max(1, deg - pad * 2)
@@ -305,6 +302,7 @@
       const spins = 360 * 6;
       const finalAngle = spins + (360 - targetAngle);
       wheelRotation += finalAngle;
+      
       requestAnimationFrame(() => {
         wheel.style.transform = `rotate(${wheelRotation}deg)`;
         if (wheelInner) wheelInner.style.transform = `rotate(${-wheelRotation}deg)`;
@@ -326,14 +324,14 @@
           after.className = 'upg-slot filled rarity-' + targetGift.rarity;
           after.style.opacity = '1';
           after.innerHTML = skzGiftImg(targetGift.file, targetGift.name, 'gift-drop-anim');
-          showToast(`🎉 Apgreyd muvaffaqiyatli! ${item.name} → ${targetGift.name} (+${skzFmt(newValue - item.value)} 💎)`, 'win');
+          showToast(`<i class="fa-solid fa-party-horn"></i> Apgreyd muvaffaqiyatli! ${item.name} <i class="fa-solid fa-arrow-right"></i> ${targetGift.name} (+${skzFmt(newValue - item.value)} <i class="fa-solid fa-gem" style="color:#38bdf8;"></i>)`, 'win');
         } else {
           skzRemoveInventoryItem(item.id);
           selectedItemId = null;
           after.style.opacity = '0.25';
           after.className = 'upg-slot';
-          after.innerHTML = '💥';
-          showToast(`💥 Omad kulmadi! Sovg'a kuydi.`, 'lose');
+          after.innerHTML = '<i class="fa-solid fa-burst" style="font-size:36px; color:#ef4444;"></i>';
+          showToast(`<i class="fa-solid fa-burst"></i> Omad kulmadi! Sovg'a kuydi.`, 'lose');
         }
         rolling = false;
         document.getElementById('upgradeBtn').disabled = false;

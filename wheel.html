@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>COFEATURE - Wheel</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <link rel="stylesheet" href="styles.css">
 <script src="balance.js" defer></script>
 <script src="vip.js" defer></script>
@@ -107,10 +108,10 @@
 
   <div class="topbar">
     <div class="topbar-left">
-      <a class="back-btn" href="index.html">⬅ Lobbi</a>
-      <div class="brand">🎡 WHEEL</div>
+      <a class="back-btn" href="index.html"><i class="fa-solid fa-arrow-left"></i> Lobbi</a>
+      <div class="brand"><i class="fa-solid fa-life-ring" style="color: #38bdf8;"></i> WHEEL</div>
     </div>
-    <div class="balance-pill">💎 <span class="js-balance">0</span></div>
+    <div class="balance-pill"><i class="fa-solid fa-gem" style="color: #38bdf8;"></i> <span class="js-balance">0</span></div>
   </div>
 
   <div class="game-page-wrap">
@@ -140,19 +141,19 @@
       <div class="bet-grid">
         <div class="bet-card bet-x2" onclick="placeBet('x2')">
           <div class="card-top"><span class="card-mult"><span class="dot"></span> 2X</span><span style="font-size:11px;color:#64748b;">50%</span></div>
-          <div class="card-my-bet"><span style="color:#64748b;font-size:12px;">Sizniki:</span><span><span id="my-x2">0</span> 💎</span></div>
+          <div class="card-my-bet"><span style="color:#64748b;font-size:12px;">Sizniki:</span><span><span id="my-x2">0</span> <i class="fa-solid fa-gem" style="color:#38bdf8;"></i></span></div>
         </div>
         <div class="bet-card bet-x3" onclick="placeBet('x3')">
           <div class="card-top"><span class="card-mult"><span class="dot"></span> 3X</span><span style="font-size:11px;color:#64748b;">30%</span></div>
-          <div class="card-my-bet"><span style="color:#64748b;font-size:12px;">Sizniki:</span><span><span id="my-x3">0</span> 💎</span></div>
+          <div class="card-my-bet"><span style="color:#64748b;font-size:12px;">Sizniki:</span><span><span id="my-x3">0</span> <i class="fa-solid fa-gem" style="color:#38bdf8;"></i></span></div>
         </div>
         <div class="bet-card bet-x5" onclick="placeBet('x5')">
           <div class="card-top"><span class="card-mult"><span class="dot"></span> 5X</span><span style="font-size:11px;color:#64748b;">15%</span></div>
-          <div class="card-my-bet"><span style="color:#64748b;font-size:12px;">Sizniki:</span><span><span id="my-x5">0</span> 💎</span></div>
+          <div class="card-my-bet"><span style="color:#64748b;font-size:12px;">Sizniki:</span><span><span id="my-x5">0</span> <i class="fa-solid fa-gem" style="color:#38bdf8;"></i></span></div>
         </div>
         <div class="bet-card bet-x50" onclick="placeBet('x50')">
           <div class="card-top"><span class="card-mult"><span class="dot"></span> 50X</span><span style="font-size:11px;color:#64748b;">5%</span></div>
-          <div class="card-my-bet"><span style="color:#64748b;font-size:12px;">Sizniki:</span><span><span id="my-x50">0</span> 💎</span></div>
+          <div class="card-my-bet"><span style="color:#64748b;font-size:12px;">Sizniki:</span><span><span id="my-x50">0</span> <i class="fa-solid fa-gem" style="color:#38bdf8;"></i></span></div>
         </div>
       </div>
 
@@ -175,7 +176,7 @@
 
     function showToast(msg, type) {
       const t = document.getElementById('toast');
-      t.innerText = msg;
+      t.innerHTML = msg; // innerHTML qilingan
       t.className = 'toast show ' + (type || '');
       if (window.skzOnToast) window.skzOnToast(type);
       setTimeout(() => t.classList.remove('show'), 1800);
@@ -192,38 +193,38 @@
 
       if (skzStake.mode === 'gift') {
         if (giftBetSlot) {
-          showToast("Bitta turda faqat bitta sovg'a tikish mumkin!", 'lose');
+          showToast("<i class='fa-solid fa-circle-exclamation'></i> Bitta turda faqat bitta sovg'a tikish mumkin!", 'lose');
           return;
         }
         if (!skzGiftBetCanPlace(0)) {
-          showToast("Avval inventardan sovg'a tanlang!", 'lose');
+          showToast("<i class='fa-solid fa-circle-exclamation'></i> Avval inventardan sovg'a tanlang!", 'lose');
           return;
         }
         giftBetStakeInfo = skzGiftBetConsume(0);
         giftBetSlot = type;
-        document.getElementById(`my-${type}`).innerHTML = `🎁 <img src="${skzGiftSrc(giftBetStakeInfo.stakedItem.file)}" alt="${giftBetStakeInfo.stakedItem.name}" style="width:18px;height:18px;object-fit:contain;vertical-align:middle;">`;
-        showToast(`🎁 ${giftBetStakeInfo.stakedItem.name} ${type.toUpperCase()} ga tikildi!`, 'win');
+        document.getElementById(`my-${type}`).innerHTML = `<i class="fa-solid fa-gift" style="color:#f59e0b;"></i> <img src="${skzGiftSrc(giftBetStakeInfo.stakedItem.file)}" alt="${giftBetStakeInfo.stakedItem.name}" style="width:18px;height:18px;object-fit:contain;vertical-align:middle;">`;
+        showToast(`<i class="fa-solid fa-gift" style="color:#f59e0b;"></i> ${giftBetStakeInfo.stakedItem.name} ${type.toUpperCase()} ga tikildi!`, 'win');
         return;
       }
 
       if (currentBetAmount <= 0 || skzGetBalance() < currentBetAmount) {
-        showToast("Balansingizda mablag' yetarli emas!", 'lose');
+        showToast("<i class='fa-solid fa-circle-exclamation'></i> Balansingizda mablag' yetarli emas!", 'lose');
         return;
       }
       skzAddBalance(-currentBetAmount);
       myBets[type] += currentBetAmount;
-      document.getElementById(`my-${type}`).innerText = skzFmt(myBets[type]);
+      document.getElementById(`my-${type}`).innerHTML = skzFmt(myBets[type]);
     }
 
     function startRound() {
       isSpinning = false;
       timeLeft = 12.0;
-      document.getElementById('status-label').innerText = "Boshlanishiga";
+      document.getElementById('status-label').innerHTML = "Boshlanishiga";
       document.getElementById('timer').style.color = "#ffffff";
 
       timerId = setInterval(() => {
         timeLeft -= 0.1;
-        document.getElementById('timer').innerText = timeLeft.toFixed(1) + 's';
+        document.getElementById('timer').innerHTML = timeLeft.toFixed(1) + 's';
         if (timeLeft <= 0) {
           clearInterval(timerId);
           spinWheel();
@@ -233,8 +234,8 @@
 
     function spinWheel() {
       isSpinning = true;
-      document.getElementById('status-label').innerText = "Aylanmoqda...";
-      document.getElementById('timer').innerText = "🎲";
+      document.getElementById('status-label').innerHTML = "Aylanmoqda...";
+      document.getElementById('timer').innerHTML = '<i class="fa-solid fa-dice" style="color: #38bdf8;"></i>';
 
       const rand = Math.random();
       let winner, targetAngle;
@@ -250,15 +251,15 @@
 
       setTimeout(() => {
         const winText = winner.toUpperCase();
-        document.getElementById('status-label').innerText = "G'OLIB";
-        document.getElementById('timer').innerText = winText;
+        document.getElementById('status-label').innerHTML = "G'OLIB";
+        document.getElementById('timer').innerHTML = winText;
         document.getElementById('timer').style.color = colors[winner];
 
         const hist = document.getElementById('history');
         const div = document.createElement('div');
         div.className = 'history-item';
         div.style.color = colors[winner];
-        div.innerText = winText;
+        div.innerHTML = winText;
         hist.prepend(div);
         if (hist.children.length > 8) hist.removeChild(hist.lastChild);
 
@@ -266,7 +267,7 @@
           const mult = parseInt(winner.replace('x', ''));
           const winAmount = myBets[winner] * mult;
           skzAddBalance(winAmount);
-          showToast(`🎉 G'olib bo'ldingiz! +${skzFmt(winAmount)} 💎`, 'win');
+          showToast(`<i class="fa-solid fa-party-horn"></i> G'olib bo'ldingiz! +${skzFmt(winAmount)} <i class="fa-solid fa-gem" style="color:#38bdf8;"></i>`, 'win');
         }
 
         if (giftBetSlot) {
@@ -274,11 +275,11 @@
           if (giftBetSlot === winner) {
             const outcome = skzGiftBetResolveWin(giftBetStakeInfo, mult);
             if (outcome.type === 'gift') {
-              showToast(`🎉 Sovg'a g'alabasi! ${outcome.from.name} → ${outcome.gift.name} 🎁`, 'win');
+              showToast(`<i class="fa-solid fa-party-horn"></i> Sovg'a g'alabasi! ${outcome.from.name} <i class="fa-solid fa-arrow-right"></i> ${outcome.gift.name} <i class="fa-solid fa-gift"></i>`, 'win');
             }
           } else {
             const outcome = skzGiftBetResolveLose(giftBetStakeInfo);
-            showToast(`💥 ${outcome.from.name} kuydi.`, 'lose');
+            showToast(`<i class="fa-solid fa-burst"></i> ${outcome.from.name} kuydi.`, 'lose');
           }
         }
 
@@ -286,7 +287,7 @@
           myBets = { x2: 0, x3: 0, x5: 0, x50: 0 };
           giftBetSlot = null;
           giftBetStakeInfo = null;
-          ['x2','x3','x5','x50'].forEach(k => document.getElementById(`my-${k}`).innerText = '0');
+          ['x2','x3','x5','x50'].forEach(k => document.getElementById(`my-${k}`).innerHTML = '0');
           startRound();
         }, 3000);
       }, 4500);

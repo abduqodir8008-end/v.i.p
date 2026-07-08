@@ -4,44 +4,48 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>COFEATURE - Casino Platform</title>
+  
+  <!-- FontAwesome ikonkalari uchun ulash -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
   <link rel="stylesheet" href="styles.css">
   <script src="balance.js" defer></script>
-<script src="vip.js" defer></script>
-<script src="referral.js" defer></script>
-<script src="extras.js" defer></script>
-<script src="shell.js" defer></script>
-<script src="daily.js" defer></script>
-<script src="social.js" defer></script>
+  <script src="vip.js" defer></script>
+  <script src="referral.js" defer></script>
+  <script src="extras.js" defer></script>
+  <script src="shell.js" defer></script>
+  <script src="daily.js" defer></script>
+  <script src="social.js" defer></script>
 </head>
 <body>
 
   <div class="topbar">
     <div class="topbar-left">
-      <div class="brand">💎 COFEATURE</div>
+      <div class="brand"><i class="fa-solid fa-gem" style="color: #38bdf8;"></i> COFEATURE</div>
     </div>
     <div style="display:flex; align-items:center; gap:10px;">
-      <div class="balance-pill">💎 <span class="js-balance">0</span></div>
+      <div class="balance-pill"><i class="fa-solid fa-gem" style="color: #38bdf8;"></i> <span class="js-balance">0</span></div>
       <button class="reset-btn" onclick="if(confirm('Balansni 10 000 ga qaytarasizmi?')) skzResetBalance()">Balansni tiklash</button>
     </div>
   </div>
 
   <main class="main-content">
     <div class="section-title">
-      <span>🔥 Mashhur O'yinlar</span>
-      <span style="font-size: 14px; color: #2f6fed; font-weight: normal;">🟢 <span class="js-online-count">3,420</span> kishi o'ynamoqda</span>
+      <span><i class="fa-solid fa-fire" style="color: #ef4444;"></i> Mashhur O'yinlar</span>
+      <span style="font-size: 14px; color: #2f6fed; font-weight: normal;"><i class="fa-solid fa-circle" style="font-size: 10px; color: #10b981;"></i> <span class="js-online-count">3,420</span> kishi o'ynamoqda</span>
     </div>
 
     <div class="games-grid">
 
       <a class="game-card" href="wheel.html">
         <div class="game-banner bg-wheel">
-          🎡
+          <i class="fa-solid fa-life-ring fa-2x"></i>
           <span class="badge badge-live">Live</span>
         </div>
         <div class="game-info">
           <div class="game-title">Wheel (Ruletka)</div>
           <div class="game-stats">
-            <span>👥 1,482 o'yinchilar</span>
+            <span><i class="fa-solid fa-users"></i> 1,482 o'yinchilar</span>
             <span style="color:#2f6fed;">X50 Max</span>
           </div>
           <div class="play-btn">O'YNASH</div>
@@ -50,13 +54,13 @@
 
       <a class="game-card" href="crash.html">
         <div class="game-banner bg-crash">
-          📈
+          <i class="fa-solid fa-chart-line fa-2x"></i>
           <span class="badge badge-hot">Hot</span>
         </div>
         <div class="game-info">
           <div class="game-title">Crash</div>
           <div class="game-stats">
-            <span>👥 840 o'yinchilar</span>
+            <span><i class="fa-solid fa-users"></i> 840 o'yinchilar</span>
             <span style="color:#f59e0b;">X1000 Max</span>
           </div>
           <div class="play-btn">O'YNASH</div>
@@ -65,12 +69,12 @@
 
       <a class="game-card" href="mines.html">
         <div class="game-banner bg-mines">
-          💣
+          <i class="fa-solid fa-bomb fa-2x"></i>
         </div>
         <div class="game-info">
           <div class="game-title">Mines</div>
           <div class="game-stats">
-            <span>👥 620 o'yinchilar</span>
+            <span><i class="fa-solid fa-users"></i> 620 o'yinchilar</span>
             <span style="color:#38bdf8;">99% RTP</span>
           </div>
           <div class="play-btn">O'YNASH</div>
@@ -79,12 +83,12 @@
 
       <a class="game-card" href="plinko.html">
         <div class="game-banner bg-plinko">
-          🟣
+          <i class="fa-solid fa-circle fa-2x" style="color: #a855f7;"></i>
         </div>
         <div class="game-info">
           <div class="game-title">Plinko</div>
           <div class="game-stats">
-            <span>👥 478 o'yinchilar</span>
+            <span><i class="fa-solid fa-users"></i> 478 o'yinchilar</span>
             <span style="color:#a855f7;">X100 Max</span>
           </div>
           <div class="play-btn">O'YNASH</div>
@@ -93,13 +97,13 @@
 
       <a class="game-card" href="coinflip.html">
         <div class="game-banner bg-coinflip">
-          🪙
+          <i class="fa-solid fa-coins fa-2x"></i>
           <span class="badge badge-new">Yangi</span>
         </div>
         <div class="game-info">
           <div class="game-title">CoinFlip</div>
           <div class="game-stats">
-            <span>👥 355 o'yinchilar</span>
+            <span><i class="fa-solid fa-users"></i> 355 o'yinchilar</span>
             <span style="color:#ef4444;">X2 Max</span>
           </div>
           <div class="play-btn">O'YNASH</div>
@@ -108,13 +112,13 @@
 
       <a class="game-card" href="cases.html">
         <div class="game-banner bg-cases">
-          🎁
+          <i class="fa-solid fa-gift fa-2x"></i>
           <span class="badge badge-new">Yangi</span>
         </div>
         <div class="game-info">
           <div class="game-title">Keyslar</div>
           <div class="game-stats">
-            <span>👥 512 o'yinchilar</span>
+            <span><i class="fa-solid fa-users"></i> 512 o'yinchilar</span>
             <span style="color:#f59e0b;">X35 Max</span>
           </div>
           <div class="play-btn">O'YNASH</div>
@@ -123,12 +127,12 @@
 
       <a class="game-card" href="upgrade.html">
         <div class="game-banner bg-plinko">
-          ⚡
+          <i class="fa-solid fa-bolt fa-2x"></i>
         </div>
         <div class="game-info">
           <div class="game-title">Apgreyder</div>
           <div class="game-stats">
-            <span>👥 301 o'yinchilar</span>
+            <span><i class="fa-solid fa-users"></i> 301 o'yinchilar</span>
             <span style="color:#a855f7;">X10 Max</span>
           </div>
           <div class="play-btn">O'YNASH</div>

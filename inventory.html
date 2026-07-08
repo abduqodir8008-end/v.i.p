@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>COFEATURE - Inventar</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <link rel="stylesheet" href="styles.css">
 <script src="balance.js" defer></script>
 <script src="vip.js" defer></script>
@@ -161,34 +162,34 @@
 
   <div class="topbar">
     <div class="topbar-left">
-      <a class="back-btn" href="index.html">⬅ Lobbi</a>
-      <div class="brand">🎒 INVENTAR</div>
+      <a class="back-btn" href="index.html"><i class="fa-solid fa-arrow-left"></i> Lobbi</a>
+      <div class="brand"><i class="fa-solid fa-briefcase" style="color: #a855f7;"></i> INVENTAR</div>
     </div>
-    <div class="balance-pill">💎 <span class="js-balance">0</span></div>
+    <div class="balance-pill"><i class="fa-solid fa-gem" style="color: #38bdf8;"></i> <span class="js-balance">0</span></div>
   </div>
 
   <div class="game-page-wrap">
     <div class="app-container" style="max-width: 640px; align-items: stretch;">
 
-      <div class="game-heading">🎒 MENING INVENTARIM</div>
+      <div class="game-heading"><i class="fa-solid fa-briefcase" style="color: #a855f7;"></i> MENING INVENTARIM</div>
       <div class="game-subtitle">Keyslardan chiqqan sovg'alaringiz shu yerda saqlanadi. Ularni sotib balansga aylantiring yoki Apgreyderda tavakkal qiling.</div>
 
       <div class="inv-toolbar">
-        <div class="inv-total">Jami qiymat: <b id="invTotal">0 💎</b></div>
+        <div class="inv-total">Jami qiymat: <b id="invTotal">0 <i class="fa-solid fa-gem" style="color: #38bdf8;"></i></b></div>
         <div style="display:flex; gap:8px;">
-          <button class="withdraw-all-btn" id="withdrawAllBtn" onclick="onWithdrawAll()">📤 Hammasini yechib olish</button>
-          <button class="sell-all-btn" id="sellAllBtn" onclick="onSellAll()">💰 Hammasini sotish</button>
+          <button class="withdraw-all-btn" id="withdrawAllBtn" onclick="onWithdrawAll()"><i class="fa-solid fa-arrow-up-right-from-square"></i> Hammasini yechib olish</button>
+          <button class="sell-all-btn" id="sellAllBtn" onclick="onSellAll()"><i class="fa-solid fa-coins"></i> Hammasini sotish</button>
         </div>
       </div>
 
       <div class="inv-grid" id="invGrid"></div>
       <div class="inv-empty" id="invEmpty" style="display:none;">
-        <div class="big">🎁</div>
+        <div class="big"><i class="fa-solid fa-gift"></i></div>
         <div>Inventaringiz bo'sh. <a href="cases.html" style="color:var(--accent);">Keyslarni oching</a>!</div>
       </div>
 
       <div class="withdraw-history" id="withdrawHistory" style="display:none;">
-        <div class="withdraw-history-title">📤 Yechib olish so'rovlari</div>
+        <div class="withdraw-history-title"><i class="fa-solid fa-arrow-up-right-from-square"></i> Yechib olish so'rovlari</div>
         <div id="withdrawList"></div>
       </div>
 
@@ -200,7 +201,7 @@
   <script>
     function showToast(msg, type) {
       const t = document.getElementById('toast');
-      t.innerText = msg;
+      t.innerHTML = msg; // innerHTML ga almashtirildi
       t.className = 'toast show ' + (type || '');
       setTimeout(() => t.classList.remove('show'), 1800);
     }
@@ -212,7 +213,7 @@
       const sellAllBtn = document.getElementById('sellAllBtn');
 
       const total = items.reduce((s, i) => s + i.value, 0);
-      document.getElementById('invTotal').innerText = skzFmt(total) + ' 💎';
+      document.getElementById('invTotal').innerHTML = skzFmt(total) + ' <i class="fa-solid fa-gem" style="color: #38bdf8;"></i>';
       sellAllBtn.disabled = items.length === 0;
       document.getElementById('withdrawAllBtn').disabled = items.length === 0;
 
@@ -227,11 +228,11 @@
           <div class="inv-item">
             <div class="gift-icon-wrap rarity-${item.rarity}">${skzGiftImg(item.file, item.name)}</div>
             <div class="inv-item-name">${item.name}</div>
-            <div class="inv-item-value">💎 ${skzFmt(item.value)}</div>
+            <div class="inv-item-value"><i class="fa-solid fa-gem" style="color:#38bdf8;"></i> ${skzFmt(item.value)}</div>
             <div class="inv-item-actions">
               <button class="inv-item-sell" onclick="onSellOne('${item.id}')">Sotish</button>
               <button class="inv-item-withdraw" onclick="onWithdrawOne('${item.id}')">Yechib olish</button>
-              <button class="inv-item-send" onclick="skzShowGiftModal('send')">🎁 Do'stga</button>
+              <button class="inv-item-send" onclick="skzShowGiftModal('send')"><i class="fa-solid fa-gift"></i> Do'stga</button>
             </div>
           </div>
         `).join('');
@@ -253,7 +254,7 @@
         <div class="withdraw-row">
           <div class="gift-icon-wrap rarity-${item.rarity}">${skzGiftImg(item.file, item.name)}</div>
           <div class="withdraw-row-name">${item.name}</div>
-          <div class="withdraw-status">⏳ Kutilmoqda</div>
+          <div class="withdraw-status"><i class="fa-solid fa-hourglass-half"></i> Kutilmoqda</div>
         </div>
       `).join('');
     }
@@ -261,7 +262,7 @@
     function onSellOne(id) {
       const amount = skzSellItem(id);
       if (amount > 0) {
-        showToast(`💰 Sotildi! +${skzFmt(amount)} 💎`, 'win');
+        showToast(`<i class="fa-solid fa-coins"></i> Sotildi! +${skzFmt(amount)} <i class="fa-solid fa-gem" style="color:#38bdf8;"></i>`, 'win');
         renderInventory();
       }
     }
@@ -269,7 +270,7 @@
     function onSellAll() {
       const total = skzSellAllInventory();
       if (total > 0) {
-        showToast(`💰 Barchasi sotildi! +${skzFmt(total)} 💎`, 'win');
+        showToast(`<i class="fa-solid fa-coins"></i> Barchasi sotildi! +${skzFmt(total)} <i class="fa-solid fa-gem" style="color:#38bdf8;"></i>`, 'win');
       }
       renderInventory();
     }
@@ -278,7 +279,7 @@
       if (!confirm("Ushbu sovg'ani yechib olish so'rovini yubormoqchimisiz? Sovg'a inventardan olinadi va so'rov \"Kutilmoqda\" holatiga o'tadi.")) return;
       const record = skzWithdrawItem(id);
       if (record) {
-        showToast(`📤 So'rov yuborildi: ${record.name}`, 'win');
+        showToast(`<i class="fa-solid fa-arrow-up-right-from-square"></i> So'rov yuborildi: ${record.name}`, 'win');
         renderInventory();
       }
     }
@@ -288,7 +289,7 @@
       if (items.length === 0) return;
       if (!confirm("Inventardagi barcha sovg'alarni yechib olish uchun so'rov yuborilsinmi?")) return;
       const records = skzWithdrawAllInventory();
-      showToast(`📤 ${records.length} ta so'rov yuborildi`, 'win');
+      showToast(`<i class="fa-solid fa-arrow-up-right-from-square"></i> ${records.length} ta so'rov yuborildi`, 'win');
       renderInventory();
     }
 

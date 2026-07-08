@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>COFEATURE - Mines</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <link rel="stylesheet" href="styles.css">
 <script src="balance.js" defer></script>
 <script src="vip.js" defer></script>
@@ -74,16 +75,16 @@
 
   <div class="topbar">
     <div class="topbar-left">
-      <a class="back-btn" href="index.html">⬅ Lobbi</a>
-      <div class="brand">💣 MINES</div>
+      <a class="back-btn" href="index.html"><i class="fa-solid fa-arrow-left"></i> Lobbi</a>
+      <div class="brand"><i class="fa-solid fa-bomb" style="color: #ef4444;"></i> MINES</div>
     </div>
-    <div class="balance-pill">💎 <span class="js-balance">0</span></div>
+    <div class="balance-pill"><i class="fa-solid fa-gem" style="color: #38bdf8;"></i> <span class="js-balance">0</span></div>
   </div>
 
   <div class="game-page-wrap">
     <div class="app-container">
 
-      <div class="game-heading">💣 COFEATURE MINES</div>
+      <div class="game-heading"><i class="fa-solid fa-bomb" style="color: #ef4444;"></i> COFEATURE MINES</div>
       <div class="game-subtitle">Bombasiz katakchalarni oching, ko'proq ochsangiz — multiplikator o'sadi. Bombaga tushsangiz — tikkan pulingiz kuyadi.</div>
 
       <div id="stakeMode"></div>
@@ -97,11 +98,11 @@
         </select>
         <input type="number" class="bet-input" id="betAmount" value="100" min="1" style="flex:1;">
       </div>
-      <div id="cashBetHint" style="font-size:11px; color:var(--text-muted); margin:-8px 0 12px;">Miqdorni kiriting (faqat 💎 rejimida).</div>
+      <div id="cashBetHint" style="font-size:11px; color:var(--text-muted); margin:-8px 0 12px;">Miqdorni kiriting (faqat <i class="fa-solid fa-gem" style="color: #38bdf8;"></i> rejimida).</div>
 
       <div class="stats-row">
         <span>Joriy multiplikator: <b id="currentMult">1.00x</b></span>
-        <span>Bo'lishi mumkin: <b id="potentialWin">0 💎</b></span>
+        <span>Bo'lishi mumkin: <b id="potentialWin">0 <i class="fa-solid fa-gem" style="color: #38bdf8;"></i></b></span>
       </div>
 
       <div class="mines-grid" id="minesGrid"></div>
@@ -124,7 +125,7 @@
 
     function showToast(msg, type) {
       const t = document.getElementById('toast');
-      t.innerText = msg;
+      t.innerHTML = msg; // innerHTML ga o'zgartirildi
       t.className = 'toast show ' + (type || '');
       if (window.skzOnToast) window.skzOnToast(type);
       setTimeout(() => t.classList.remove('show'), 1800);
@@ -161,9 +162,9 @@
 
     function updateStats() {
       currentMultiplier = calcMultiplier(revealed.size, mineCount);
-      document.getElementById('currentMult').innerText = currentMultiplier.toFixed(2) + 'x';
+      document.getElementById('currentMult').innerHTML = currentMultiplier.toFixed(2) + 'x';
       const stakeValue = currentStakeInfo ? currentStakeInfo.value : betAmount;
-      document.getElementById('potentialWin').innerText = skzFmt(stakeValue * currentMultiplier) + ' 💎';
+      document.getElementById('potentialWin').innerHTML = skzFmt(stakeValue * currentMultiplier) + ' <i class="fa-solid fa-gem" style="color: #38bdf8;"></i>';
     }
 
     function onMainBtn() {
@@ -172,7 +173,7 @@
         betAmount = parseInt(document.getElementById('betAmount').value) || 0;
         mineCount = parseInt(document.getElementById('mineCount').value);
         if (!skzGiftBetCanPlace(betAmount)) {
-          showToast(skzStake.mode === 'gift' ? "Avval sovg'a tanlang!" : "Balansingizda mablag' yetarli emas!", 'lose');
+          showToast(skzStake.mode === 'gift' ? "<i class='fa-solid fa-circle-exclamation'></i> Avval sovg'a tanlang!" : "<i class='fa-solid fa-circle-exclamation'></i> Balansingizda mablag' yetarli emas!", 'lose');
           return;
         }
         currentStakeInfo = skzGiftBetConsume(betAmount);
@@ -185,19 +186,19 @@
         document.getElementById('stakeMode').style.opacity = '0.4';
         document.getElementById('stakeMode').style.pointerEvents = 'none';
         updateStats();
-        document.getElementById('mainBtn').innerText = 'NAQD OLISH 💰';
+        document.getElementById('mainBtn').innerHTML = 'NAQD OLISH <i class="fa-solid fa-coins"></i>';
         document.getElementById('mainBtn').className = 'primary-btn blue';
       } else {
         // cash out
         if (revealed.size === 0) {
-          showToast("Avval kamida bitta katakcha oching!", 'lose');
+          showToast("<i class='fa-solid fa-circle-exclamation'></i> Avval kamida bitta katakcha oching!", 'lose');
           return;
         }
         const outcome = skzGiftBetResolveWin(currentStakeInfo, currentMultiplier);
         if (outcome.type === 'gift') {
-          showToast(`💰 Naqd oldingiz! ${outcome.from.name} → ${outcome.gift.name} 🎁`, 'win');
+          showToast(`<i class="fa-solid fa-coins" style="color: #f59e0b;"></i> Naqd oldingiz! ${outcome.from.name} <i class="fa-solid fa-arrow-right"></i> ${outcome.gift.name} <i class="fa-solid fa-gift"></i>`, 'win');
         } else {
-          showToast(`💰 Naqd oldingiz! +${skzFmt(outcome.amount)} 💎`, 'win');
+          showToast(`<i class="fa-solid fa-coins" style="color: #f59e0b;"></i> Naqd oldingiz! +${skzFmt(outcome.amount)} <i class="fa-solid fa-gem" style="color: #38bdf8;"></i>`, 'win');
         }
         endGame(false);
       }
@@ -208,29 +209,29 @@
 
       if (bombs.has(idx)) {
         tile.classList.add('revealed', 'bomb');
-        tile.innerText = '💣';
+        tile.innerHTML = '<i class="fa-solid fa-bomb"></i>';
         // reveal all bombs
         bombs.forEach(b => {
           const t = document.querySelector(`.mine-tile[data-idx="${b}"]`);
-          if (t) { t.classList.add('revealed', 'bomb'); t.innerText = '💣'; }
+          if (t) { t.classList.add('revealed', 'bomb'); t.innerHTML = '<i class="fa-solid fa-bomb"></i>'; }
         });
         const outcome = skzGiftBetResolveLose(currentStakeInfo);
-        showToast(outcome.type === 'gift-lost' ? `💥 Portladi! ${outcome.from.name} kuydi!` : `💥 Portladi! -${skzFmt(outcome.amount)} 💎`, 'lose');
+        showToast(outcome.type === 'gift-lost' ? `<i class="fa-solid fa-burst"></i> Portladi! ${outcome.from.name} kuydi!` : `<i class="fa-solid fa-burst"></i> Portladi! -${skzFmt(outcome.amount)} <i class="fa-solid fa-gem" style="color:#38bdf8;"></i>`, 'lose');
         endGame(true);
         return;
       }
 
       revealed.add(idx);
       tile.classList.add('revealed', 'gem');
-      tile.innerText = '💎';
+      tile.innerHTML = '<i class="fa-solid fa-gem" style="color:#38bdf8;"></i>';
       updateStats();
 
       if (revealed.size === GRID_SIZE - mineCount) {
         const outcome = skzGiftBetResolveWin(currentStakeInfo, currentMultiplier);
         if (outcome.type === 'gift') {
-          showToast(`🎉 Barcha xazinalar topildi! ${outcome.from.name} → ${outcome.gift.name} 🎁`, 'win');
+          showToast(`<i class="fa-solid fa-check"></i> Barcha xazinalar topildi! ${outcome.from.name} <i class="fa-solid fa-arrow-right"></i> ${outcome.gift.name} <i class="fa-solid fa-gift"></i>`, 'win');
         } else {
-          showToast(`🎉 Barcha xazinalar topildi! +${skzFmt(outcome.amount)} 💎`, 'win');
+          showToast(`<i class="fa-solid fa-check"></i> Barcha xazinalar topildi! +${skzFmt(outcome.amount)} <i class="fa-solid fa-gem" style="color:#38bdf8;"></i>`, 'win');
         }
         endGame(false);
       }
@@ -244,10 +245,10 @@
       document.getElementById('betAmount').disabled = false;
       document.getElementById('stakeMode').style.opacity = '1';
       document.getElementById('stakeMode').style.pointerEvents = 'auto';
-      document.getElementById('mainBtn').innerText = 'O\'YINNI BOSHLASH';
+      document.getElementById('mainBtn').innerHTML = 'O\'YINNI BOSHLASH';
       document.getElementById('mainBtn').className = 'primary-btn';
-      document.getElementById('currentMult').innerText = '1.00x';
-      document.getElementById('potentialWin').innerText = '0 💎';
+      document.getElementById('currentMult').innerHTML = '1.00x';
+      document.getElementById('potentialWin').innerHTML = '0 <i class="fa-solid fa-gem" style="color:#38bdf8;"></i>';
     }
 
     window.onload = () => {
